@@ -1,0 +1,9 @@
+messages:
+  no-permission: "&cKamu tidak punya izin untuk melakukan ini!"
+  crate-spawned: "&aCrate %boss% berhasil muncul di %loc%!"
+  crate-removed: "&cCrate %boss% berhasil dihapus."
+  already-claimed: "&cKamu sudah mengambil hadiah dari peti ini!"
+  insufficient-funds: "&cSaldo Gins tidak cukup! Butuh &e%cost% Gins&c."
+  rolling-started: "&eMemulai putaran hadiah... Semoga beruntung!"
+  reward-received: "&fSelamat! Kamu mendapatkan &e%reward%&f."
+  no-reward-found: "&cTerjadi kesalahan: Hadiah tidak ditemukan di database."

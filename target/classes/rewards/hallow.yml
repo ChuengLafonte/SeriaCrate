@@ -1,0 +1,48 @@
+crate-settings:
+  block: PUMPKIN
+tiers:
+  s:
+    1:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:UNIDENTIFIED_SWORD_MYTHICAL
+      weight: 1
+      amount: 1
+    2:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:UNIDENTIFIED_SWORD_LEGENDARY
+      weight: 1
+      amount: 2
+    3:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:BAG_OF_AURASKILLS
+      weight: 3
+      amount: 15
+    4:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:BAG_OF_GINS
+      weight: 3
+      amount: 15
+    5:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:BAG_OF_XP
+      weight: 3
+      amount: 15
+    6:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      weight: 2
+      amount: 3
+    7:
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: "&6500.000 ⏺ &fɢɪɴꜱ"
+      cmd: "eco give %player% 500000"
+      weight: 1
+      amount: 1
+    10:
+      type: PET
+      material: ecopet:fighting_bird_birdegg
+      display_name: "&9Bird Egg &7[Lvl 1]"
+      weight: 1
+      amount: 1
+  # ... dst

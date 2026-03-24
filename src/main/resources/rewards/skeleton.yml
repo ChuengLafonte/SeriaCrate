@@ -1,0 +1,64 @@
+crate-settings:
+  block: SKELETON_SKULL
+tiers:
+  s:
+    1:
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:GLOW_POWDER
+      weight: 1
+      amount: 1
+    2:
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:PLANTING_MACHINE
+      weight: 1
+      amount: 4
+    3:
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:COMPOSED_DNA
+      weight: 1
+      amount: 4
+    4:
+      type: ITEM
+      material: mmoitems-MOBDROP:SACRED_GARDEN_SOUL
+      weight: 1
+      amount: 4
+    5:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      weight: 2
+      amount: 3
+    6:
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: "&6500.000 ⏺ &fɢɪɴꜱ"
+      cmd: "eco give %player% 500000"
+      weight: 1
+      amount: 1
+    7:
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: "&6300.000 ⏺ &fɢɪɴꜱ"
+      cmd: "eco give %player% 300000"
+      weight: 2
+      amount: 1
+    8:
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: "&6200.000 ⏺ &fɢɪɴꜱ"
+      cmd: "eco give %player% 200000"
+      weight: 3
+      amount: 1
+    9:
+      type: PET
+      material: ecopet:fighting_piya_piyaegg
+      display_name: "&ePiya Egg &7[Lvl 1]"
+      weight: 1
+      amount: 1
+  a:
+    # (Lanjutkan input data skeleton tier a, b, c, d sesuai daftar di atas)
+    1:
+      type: ITEM
+      material: mmoitems-MOBDROP:ALPHA_COW_DNA
+      weight: 1
+      amount: 3
+    # ... dst

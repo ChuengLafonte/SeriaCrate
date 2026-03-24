@@ -1,0 +1,15 @@
+name: SeriaCrate
+version: 1.0
+main: id.seria.crate.SeriaCrate
+api-version: '1.21'
+author: Project Seria Dev
+description: Ultimate Crate Reward System with Gacha Animation
+softdepend: [MMOItems, EcoPets, Vault]
+
+commands:
+  seriacrate:
+    description: Admin commands for SeriaCrate
+    permission: seriacrate.admin
+    aliases: [scrate]
+  opencrate:
+    description: Open the crate UI
