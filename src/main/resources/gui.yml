@@ -1,0 +1,12 @@
+gui:
+  opening:
+    title: "&8Rolling: %boss% [%tier%]"
+    size: 27
+  preview:
+    title: "&8Preview Hadiah: %boss%"
+    size: 54
+  editor:
+    main-menu: "&8Crate Editor: Main Menu"
+    settings: "&8Settings: %boss%"
+    tiers: "&8Tiers: %boss%"
+    item-editor: "&8Editor: %boss% | %tier%"

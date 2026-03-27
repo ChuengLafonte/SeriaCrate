@@ -1,0 +1,471 @@
+crate-settings:
+  block: ENDER_CHEST
+  is-temporary: false
+  duration: 180
+tiers:
+  s:
+    '1':
+      weight: 1
+      amount: 1
+      commands:
+      - mi give MISCELLANEOUS FARMER_ESSENCE %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:FARMER_ESSENCE
+      display_name: '&x&E&5&6&6&F&FFarmer Essence'
+      lore:
+      - '&f'
+      - '&7ᴄᴀɪʀᴀɴ ᴇꜱᴇɴꜱɪ ꜱᴇᴏʀᴀɴɢ ꜰᴀʀᴍᴇʀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '2':
+      weight: 2
+      amount: 2
+      commands:
+      - mi give CONSUMABLE ARCHONPIYAGRA %player_name% 2
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: '&x&F&2&B&8&3&4Archon''s Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ꜱᴜᴘᴇʀ-ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&310.000 XP Pet'
+      - '&7'
+      enchant: unbreaking
+      hide_enchant: true
+    '3':
+      weight: 2
+      amount: 3
+      commands:
+      - mi give MOBDROP FROZENTEAR %player_name% 3
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENTEAR
+      display_name: '&x&5&2&8&6&F&FFrozen Tear'
+      lore:
+      - '&f'
+      - '&f &7ᴀɪʀ ᴍᴀᴛᴀ ʏᴀɴɢ ᴛᴇʟᴀʜ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '4':
+      weight: 3
+      amount: 6
+      commands:
+      - mi give MOBDROP FROZENBONE %player_name% 6
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: '&x&5&4&E&B&6&8Frozen Bone'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴛᴜʟᴀɴɢ ʏᴀɴɢ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★&7★★★★'
+    '5':
+      weight: 1
+      amount: 1
+      commands:
+      - eco give %player_name% 150000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 Gins'
+    '6':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 75000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 Gins'
+    '7':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give %player_name% 50000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 Gins'
+    '8':
+      weight: 1
+      amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_seed
+      broadcast: true
+      type: PET
+      material: ecopets:fighting_seed
+      display_name: '&aSeed &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &aSeed&x&8&2&7&D&7&9&o!'
+      enchant: unbreaking
+      hide_enchant: true
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlMjk4YWYwNjg3YTY5NDEzYWFjYjFlOTcyNmYyNzA4ZjQ5OTE1OWU0Y2U3ZDE2ZDNhNjcyOWUwYTUzNGEyNSJ9fX0=
+  a:
+    '1':
+      weight: 1
+      amount: 2
+      commands:
+      - mi give MOBDROP FROZENTEAR %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENTEAR
+      display_name: '&x&5&2&8&6&F&FFrozen Tear'
+      lore:
+      - '&f'
+      - '&f &7ᴀɪʀ ᴍᴀᴛᴀ ʏᴀɴɢ ᴛᴇʟᴀʜ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '2':
+      weight: 1
+      amount: 1
+      commands:
+      - mi give CONSUMABLE ARCHONPIYAGRA %player_name% 2
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: '&x&F&2&B&8&3&4Archon''s Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ꜱᴜᴘᴇʀ-ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&310.000 XP Pet'
+      - '&7'
+      enchant: unbreaking
+      hide_enchant: true
+    '3':
+      weight: 2
+      amount: 2
+      commands:
+      - mi give CONSUMABLE PIYAGRA %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      display_name: '&x&F&2&B&8&3&4Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&35.000 XP Pet'
+      - '&7'
+    '4':
+      weight: 2
+      amount: 4
+      commands:
+      - mi give MOBDROP FROZENBONE %player_name% 6
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: '&x&5&4&E&B&6&8Frozen Bone'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴛᴜʟᴀɴɢ ʏᴀɴɢ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★&7★★★★'
+    '5':
+      weight: 1
+      amount: 1
+      commands:
+      - eco give %player_name% 150000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 Gins'
+    '6':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 75000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 Gins'
+    '7':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give %player_name% 50000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 Gins'
+    '8':
+      weight: 1
+      amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_seed
+      broadcast: true
+      type: PET
+      material: ecopets:fighting_seed
+      display_name: '&aSeed &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &aSeed&x&8&2&7&D&7&9&o!'
+      enchant: unbreaking
+      hide_enchant: true
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlMjk4YWYwNjg3YTY5NDEzYWFjYjFlOTcyNmYyNzA4ZjQ5OTE1OWU0Y2U3ZDE2ZDNhNjcyOWUwYTUzNGEyNSJ9fX0=
+  b:
+    '1':
+      weight: 1
+      amount: 1
+      commands:
+      - mi give CONSUMABLE PIYAGRA %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      display_name: '&x&F&2&B&8&3&4Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&35.000 XP Pet'
+      - '&7'
+    '2':
+      weight: 3
+      amount: 3
+      commands:
+      - mi give CONSUMABLE OPENEDCANFOOD %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      display_name: '&x&F&2&B&8&3&4Opened Can Food'
+      lore:
+      - '&f'
+      - '&7ᴋᴀʟᴇɴɢ ᴍᴀᴋᴀɴᴀɴ ʏᴀɴɢ ꜱᴜᴅᴀʜ'
+      - '&7ᴛᴇʀʙᴜᴋᴀ, ᴛᴇʀᴅᴀᴘᴀᴛ ꜱɪꜱᴀ ᴍᴀᴋᴀɴᴀɴ'
+      - '&7ᴅɪ ᴅᴀʟᴀᴍɴʏᴀ.'
+      - '&7'
+      - '&x&4&3&E&9&4&3100 XP Pet'
+      - '&7'
+    '3':
+      weight: 1
+      amount: 2
+      commands:
+      - mi give MOBDROP FROZENBONE %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: '&x&5&4&E&B&6&8Frozen Bone'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴛᴜʟᴀɴɢ ʏᴀɴɢ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★&7★★★★'
+    '4':
+      weight: 3
+      amount: 4
+      commands:
+      - mi give MOBDROP FLUFFYSNOW %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FLUFFYSNOW
+      display_name: '&x&5&4&E&B&6&8Fluffy Snow'
+      lore:
+      - '&f'
+      - '&f &7ɢᴜᴍᴘᴀʟᴀɴ ꜱᴀʟᴊᴜ ʟᴇᴍʙᴜᴛ, ᴅᴇɴɢᴀɴ'
+      - '&f &7ᴛᴇᴋꜱᴛᴜʀ ᴋᴇɴʏᴀʟ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★&7★★★★'
+    '5':
+      weight: 3
+      amount: 4
+      commands:
+      - mi give MOBDROP ICECUBE %player_name% 1
+      type: ITEM
+      material: mmoitems-MOBDROP:ICECUBE
+      display_name: '&x&5&2&8&6&F&FIce Cube'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴇꜱ ʙᴀᴛᴜ ʙᴇʀʙᴇɴᴛᴜᴋ ᴋᴏᴛᴀᴋ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '6':
+      weight: 1
+      amount: 1
+      commands:
+      - eco give %player_name% 75000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 Gins'
+    '7':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 50000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 Gins'
+    '8':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give %player_name% 25000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 Gins'
+  c:
+    '1':
+      weight: 3
+      amount: 2
+      commands:
+      - mi give MISCELLANEOUS FARMER_ESSENCE %player_name% 1
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:FARMER_ESSENCE
+      display_name: '&x&E&5&6&6&F&FFarmer Essence'
+      lore:
+      - '&f'
+      - '&7ᴄᴀɪʀᴀɴ ᴇꜱᴇɴꜱɪ ꜱᴇᴏʀᴀɴɢ ꜰᴀʀᴍᴇʀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '2':
+      weight: 3
+      amount: 2
+      commands:
+      - mi give CONSUMABLE ARCHONPIYAGRA %player_name% 2
+      broadcast: true
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: '&x&F&2&B&8&3&4Archon''s Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ꜱᴜᴘᴇʀ-ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&310.000 XP Pet'
+      - '&7'
+      enchant: unbreaking
+      hide_enchant: true
+    '3':
+      weight: 3
+      amount: 2
+      commands:
+      - mi give MOBDROP FROZENTEAR %player_name% 3
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENTEAR
+      display_name: '&x&5&2&8&6&F&FFrozen Tear'
+      lore:
+      - '&f'
+      - '&f &7ᴀɪʀ ᴍᴀᴛᴀ ʏᴀɴɢ ᴛᴇʟᴀʜ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '4':
+      weight: 1
+      amount: 1
+      commands:
+      - mi give MOBDROP FROZENBONE %player_name% 6
+      broadcast: true
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: '&x&5&4&E&B&6&8Frozen Bone'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴛᴜʟᴀɴɢ ʏᴀɴɢ ᴍᴇᴍʙᴇᴋᴜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★&7★★★★'
+    '5':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 150000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 Gins'
+    '6':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give  %player_name% 75000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 Gins'
+    '7':
+      weight: 1
+      amount: 1
+      commands:
+      - eco give %player_name% 50000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 Gins'
+  d:
+    '1':
+      weight: 4
+      amount: 2
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      commands:
+      - mi give CONSUMABLE OPENEDCANFOOD %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Opened Can Food'
+      lore:
+      - '&f'
+      - '&7ᴋᴀʟᴇɴɢ ᴍᴀᴋᴀɴᴀɴ ʏᴀɴɢ ꜱᴜᴅᴀʜ'
+      - '&7ᴛᴇʀʙᴜᴋᴀ, ᴛᴇʀᴅᴀᴘᴀᴛ ꜱɪꜱᴀ ᴍᴀᴋᴀɴᴀɴ'
+      - '&7ᴅɪ ᴅᴀʟᴀᴍɴʏᴀ.'
+      - '&7'
+      - '&x&4&3&E&9&4&3100 XP Pet'
+      - '&7'
+    # Sila timpa dengan item: mmoitems-CONSUMABLE:OPENEDCANFOOD melalui GUI
+    '2':
+      weight: 3
+      amount: 1
+      type: ITEM
+      material: mmoitems-MOBDROP:ICECUBE
+      commands:
+      - mi give MOBDROP ICECUBE %player_name% 1
+      display_name: '&x&5&2&8&6&F&FIce Cube'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴏᴛᴏɴɢᴀɴ ᴇꜱ ʙᴀᴛᴜ ʙᴇʀʙᴇɴᴛᴜᴋ ᴋᴏᴛᴀᴋ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    # Sila timpa dengan item: mmoitems-MOBDROP:ICECUBE melalui GUI
+    '3':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 25000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 Gins'
+    '4':
+      weight: 2
+      amount: 1
+      commands:
+      - eco give %player_name% 20000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&620.000 Gins'
+    '5':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give %player_name% 15000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&615.000 Gins'
+    '6':
+      weight: 3
+      amount: 1
+      commands:
+      - eco give %player_name% 10000
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&610.000 Gins'

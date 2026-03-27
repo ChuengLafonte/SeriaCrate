@@ -1,0 +1,57 @@
+crate-settings:
+  block: SKELETON_SKULL
+  is-temporary: false
+  duration: 180
+tiers:
+  s:
+    1:
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: "&bFrozen Bone"
+      cmd: "mi give MOBDROP FROZENBONE %player% 1"
+      weight: 1
+      amount: 1
+    2:
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:PLANTING_MACHINE
+      display_name: "&aPlanting Machine"
+      cmd: "mi give MISCELLANEOUS PLANTING_MACHINE %player% 1"
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MISCELLANEOUS:PLANTING_MACHINE
+    3:
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:COMPOSED_DNA
+      display_name: "&dComposed DNA"
+      cmd: "mi give MISCELLANEOUS COMPOSED_DNA %player% 1"
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MISCELLANEOUS:COMPOSED_DNA
+    4:
+      type: ITEM
+      material: mmoitems-MOBDROP:SACRED_GARDEN_SOUL
+      display_name: "&5Sacred Garden Soul"
+      cmd: "mi give MOBDROP SACRED_GARDEN_SOUL %player% 1"
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MOBDROP:SACRED_GARDEN_SOUL
+    5:
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: "&6Archon Piyagra"
+      cmd: "mi give CONSUMABLE ARCHONPIYAGRA %player% 1"
+      weight: 2
+      amount: 3
+      # Sila timpa dengan item: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+    6:
+      weight: 1
+      amount: 1
+      commands:
+        - "eco give %player% 500000"
+      # Sila timpa dengan item: GOLD_NUGGET (500.000 GINS)
+    7:
+      weight: 1
+      amount: 1
+      commands:
+        - "eco give %player% 300000"
+      # Sila timpa dengan item: GOLD_NUGGET (300.000 GINS)

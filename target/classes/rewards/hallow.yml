@@ -1,0 +1,41 @@
+crate-settings:
+  block: SKELETON_SKULL
+  is-temporary: false
+  duration: 180
+tiers:
+  s:
+    1:
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      display_name: "&bFrozen Bone"
+      cmd: "mi give MOBDROP FROZENBONE %player% 1"
+      weight: 1
+      amount: 1
+    2:
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MISCELLANEOUS:PLANTING_MACHINE
+    3:
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MISCELLANEOUS:COMPOSED_DNA
+    4:
+      weight: 1
+      amount: 4
+      # Sila timpa dengan item: mmoitems-MOBDROP:SACRED_GARDEN_SOUL
+    5:
+      weight: 2
+      amount: 3
+      # Sila timpa dengan item: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+    6:
+      weight: 1
+      amount: 1
+      commands:
+        - "eco give %player% 500000"
+      # Sila timpa dengan item: GOLD_NUGGET (500.000 GINS)
+    7:
+      weight: 1
+      amount: 1
+      commands:
+        - "eco give %player% 300000"
+      # Sila timpa dengan item: GOLD_NUGGET (300.000 GINS)

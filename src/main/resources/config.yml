@@ -1,0 +1,23 @@
+# ==========================================
+# PROJECT SERIA - MAIN CONFIGURATION
+# ==========================================
+
+settings:
+  prefix: "&7&9&1&E&F&Fᴘʀᴏᴊᴇᴄᴛ ꜱᴇʀɪᴀ &7» "
+  # Berapa Gins yang dibutuhkan untuk buka crate (jika pakai sistem bayar)
+  crate-cost: 20
+  # Delay sebelum rolling dimulai (ticks)
+  start-delay-ticks: 5
+  # Durasi maksimal animasi putaran (ticks)
+  max-rolling-duration-ticks: 60
+
+temporary-crate:
+  enabled: true
+  # Berapa lama peti muncul di dunia sebelum hilang
+  duration-seconds: 180 
+
+# Integrasi Plugin Luar
+hooks:
+  mmoitems: true
+  ecopets: true
+  vault: true
