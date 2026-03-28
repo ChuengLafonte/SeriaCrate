@@ -1,11 +1,14 @@
 package id.seria.crate.listener;
 
+import java.io.File;
 import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,7 +43,8 @@ public class BlockListener implements Listener {
             Player player = event.getPlayer();
             String bossName = this.plugin.getLocationManager().getCrateAt(loc);
             boolean isTemporary = false;
-            TemporaryCrateManager.ActiveCrate tempCrate;
+            TemporaryCrateManager.ActiveCrate tempCrate = null;
+
             if (bossName == null) {
                tempCrate = this.plugin.getTempCrateManager().getCrateAt(loc);
                if (tempCrate != null) {
@@ -50,34 +54,48 @@ public class BlockListener implements Listener {
             }
 
             if (bossName != null) {
-               event.setCancelled(true);
+               event.setCancelled(true); // Batalkan interaksi Vanilla (mencegah chest terbuka biasa)
+
+               // ===========================================
+               // [FITUR BARU] SHIFT + KLIK KIRI UNTUK ADMIN MENGHAPUS
+               // ===========================================
                if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-                  player.openInventory(PreviewGUI.createPreview(bossName));
-               } else {
-                  if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                  if (player.isSneaking() && (player.isOp() || player.hasPermission("seriacrate.admin"))) {
                      if (isTemporary) {
-                        tempCrate = this.plugin.getTempCrateManager().getCrateAt(loc);
-                        if (tempCrate.claimedPlayers.contains(player.getUniqueId())) {
-                           FileConfiguration var10002 = this.plugin.getConfigManager().getConfig();
-                           player.sendMessage(ChatColor.translateAlternateColorCodes('&', var10002.getString("settings.prefix") + "&cKamu sudah mengambil hadiah!"));
-                           return;
-                        }
-
-                        tempCrate.claimedPlayers.add(player.getUniqueId());
+                        tempCrate.timeLeft = 0; // Memaksa updater menghancurkan Crate Sementara
+                     } else {
+                        this.plugin.getLocationManager().removeCrateLocation(loc); // Hapus Crate Permanen
                      }
-
-                     String tierToRoll = "s";
-                     List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
-                     if (pool.isEmpty()) {
-                        player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll);
+                     loc.getBlock().setType(Material.AIR);
+                     player.sendMessage("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihancurkan paksa!");
+                     return;
+                  }
+                  // Jika bukan admin/tidak shift, buka Preview
+                  player.openInventory(PreviewGUI.createPreview(bossName));
+               } 
+               // ===========================================
+               // KLIK KANAN UNTUK ROLL HADIAH
+               // ===========================================
+               else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                  if (isTemporary) {
+                     if (tempCrate.claimedPlayers.contains(player.getUniqueId())) {
+                        String prefix = this.plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] ");
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', prefix + "&cKamu sudah mengambil hadiah di crate ini!"));
                         return;
                      }
-
-                     Inventory inv = CrateGUI.createOpeningGUI(bossName, tierToRoll);
-                     player.openInventory(inv);
-                     (new RollingEngine(this.plugin)).startRolling(player, inv, pool);
+                     tempCrate.claimedPlayers.add(player.getUniqueId());
                   }
 
+                  String tierToRoll = "s"; // Bisa disesuaikan nanti dengan Key Player
+                  List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
+                  if (pool == null || pool.isEmpty()) {
+                     player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll.toUpperCase());
+                     return;
+                  }
+
+                  Inventory inv = CrateGUI.createOpeningGUI(bossName, tierToRoll);
+                  player.openInventory(inv);
+                  new RollingEngine(this.plugin).startRolling(player, inv, pool);
                }
             }
          }
@@ -90,26 +108,40 @@ public class BlockListener implements Listener {
       if (item != null && item.hasItemMeta()) {
          NamespacedKey key = new NamespacedKey(this.plugin, "crate_id");
          if (item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
-            String boss = (String)item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
-            this.plugin.getLocationManager().setCrateLocation(event.getBlock().getLocation(), boss);
-            event.getPlayer().sendMessage("§a[SeriaCrate] Crate permanen " + boss.toUpperCase() + " berhasil diletakkan!");
+            String boss = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
+            
+            // ===========================================
+            // [PERBAIKAN] CEK APAKAH INI TEMPORARY/PERMANEN DARI CONFIG
+            // ===========================================
+            File file = new File(plugin.getConfigManager().getRewardsFolder(), boss + ".yml");
+            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+            boolean isTemp = config.getBoolean("crate-settings.is-temporary", false);
+            
+            if (isTemp) {
+               this.plugin.getTempCrateManager().spawnTemporaryCrate(event.getBlock().getLocation(), boss);
+               event.getPlayer().sendMessage("§a[SeriaCrate] Crate SEMENTARA " + boss.toUpperCase() + " berhasil diletakkan!");
+            } else {
+               this.plugin.getLocationManager().setCrateLocation(event.getBlock().getLocation(), boss);
+               event.getPlayer().sendMessage("§a[SeriaCrate] Crate PERMANEN " + boss.toUpperCase() + " berhasil diletakkan!");
+            }
          }
-
       }
    }
 
    @EventHandler
    public void onCrateBreak(BlockBreakEvent event) {
       String bossName = this.plugin.getLocationManager().getCrateAt(event.getBlock().getLocation());
-      if (bossName != null) {
+      TemporaryCrateManager.ActiveCrate temp = this.plugin.getTempCrateManager().getCrateAt(event.getBlock().getLocation());
+      
+      if (bossName != null || temp != null) {
          if (event.getPlayer().hasPermission("seriacrate.admin") && event.getPlayer().isSneaking()) {
-            this.plugin.getLocationManager().removeCrateLocation(event.getBlock().getLocation());
-            event.getPlayer().sendMessage("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihapus dari dunia!");
+            if (bossName != null) this.plugin.getLocationManager().removeCrateLocation(event.getBlock().getLocation());
+            if (temp != null) temp.timeLeft = 0;
+            event.getPlayer().sendMessage("§c[SeriaCrate] Crate berhasil dihapus dari dunia!");
          } else {
             event.setCancelled(true);
-            event.getPlayer().sendMessage("§cIni adalah Crate! (Admin: Tahan SHIFT + Hancurkan untuk menghapus)");
+            event.getPlayer().sendMessage("§cIni adalah Crate! (Admin: Tahan SHIFT + Klik Kiri untuk menghancurkan)");
          }
       }
-
    }
 }

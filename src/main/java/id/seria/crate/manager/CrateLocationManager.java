@@ -1,20 +1,22 @@
 package id.seria.crate.manager;
 
-import id.seria.crate.SeriaCrate;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.entity.Display.Billboard;
+import org.bukkit.entity.TextDisplay;
+
+import id.seria.crate.SeriaCrate;
 
 public class CrateLocationManager {
    private final SeriaCrate plugin;
@@ -81,6 +83,13 @@ public class CrateLocationManager {
    }
 
    private void spawnHologram(Location loc, String boss) {
+      // [PERBAIKAN] Cek Config Hologram Dulu
+      File crateFile = new File(this.plugin.getConfigManager().getRewardsFolder(), boss + ".yml");
+      FileConfiguration crateConfig = YamlConfiguration.loadConfiguration(crateFile);
+      if (!crateConfig.getBoolean("crate-settings.hologram", true)) {
+          return; // Batalkan proses kemunculan Hologram jika di-set FALSE di Editor
+      }
+
       Location holoLoc = loc.clone().add(0.5D, 1.2D, 0.5D);
       TextDisplay display = (TextDisplay)holoLoc.getWorld().spawn(holoLoc, TextDisplay.class);
       FileConfiguration holoConfig = this.plugin.getConfigManager().getHologram();

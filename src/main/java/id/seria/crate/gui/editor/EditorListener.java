@@ -109,10 +109,14 @@ public class EditorListener implements Listener {
                 // ==========================================
                 else if (itemName.contains("Hologram")) {
                     boolean currentHolo = config.getBoolean("crate-settings.hologram", true);
-                    config.set("crate-settings.hologram", !currentHolo); // Balikkan nilai True <-> False
+                    config.set("crate-settings.hologram", !currentHolo); 
                     save(config, file);
                     player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
-                    EditorMenuManager.openCrateSettings(player, holder.getCrateId()); // Refresh GUI
+                    
+                    // [TAMBAHAN] Auto Reload Hologram di World saat diedit
+                    SeriaCrate.getInstance().getLocationManager().loadLocations(); 
+                    
+                    EditorMenuManager.openCrateSettings(player, holder.getCrateId());
                 } 
                 // ==========================================
                 else if (itemName.contains("Blok Fisik")) {
