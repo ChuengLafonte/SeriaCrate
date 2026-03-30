@@ -3,187 +3,298 @@ package id.seria.crate.gui.editor;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import id.seria.crate.SeriaCrate;
 
 public class EditorListener implements Listener {
 
     public static class ChatPrompt {
-        public String type; 
-        public String crateId;
-        public int lineIndex;
-
-        public ChatPrompt(String type, String crateId, int lineIndex) {
-            this.type = type; this.crateId = crateId; this.lineIndex = lineIndex;
+        public String type; public String crateId; public String tierId; public int dataIndex;
+        public ChatPrompt(String type, String crateId, String tierId, int dataIndex) {
+            this.type = type; this.crateId = crateId; this.tierId = tierId; this.dataIndex = dataIndex;
         }
     }
-
     private final Map<UUID, ChatPrompt> activePrompts = new HashMap<>();
 
     @EventHandler
     public void onEditorClick(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof EditorHolder)) return;
-
         EditorHolder holder = (EditorHolder) event.getInventory().getHolder();
         Player player = (Player) event.getWhoClicked();
 
-        if (holder.getType() == EditorHolder.MenuType.ITEM_EDITOR && event.getRawSlot() < 45) return;
-        if (holder.getType() == EditorHolder.MenuType.BLOCK_EDITOR && event.getRawSlot() == 13) return;
+        if (holder.getType() == EditorHolder.MenuType.REWARD_EDIT) {
+            if (event.getClickedInventory() != null && event.getClickedInventory().equals(player.getInventory())) {
+                if (event.isShiftClick()) { event.setCancelled(true); player.sendMessage("§cTarik dan jatuhkan item manual ke slot 4!"); }
+                return;
+            }
+            if (event.getRawSlot() == 4) {
+                event.setCancelled(true);
+                ItemStack cursorItem = event.getCursor();
+                if (cursorItem != null && cursorItem.getType() != Material.AIR) {
+                    SeriaCrate.getInstance().getRewardManager().updateRewardItem(holder.getCrateId(), holder.getTierId(), holder.getRewardIndex(), cursorItem.clone());
+                    player.sendMessage("§aConfig bersih berhasil di-generate!");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                } else player.sendMessage("§cKamu harus memegang item di kursor (mouse) lalu klik kotak ini!");
+                return;
+            }
+        } 
+        else if (holder.getType() == EditorHolder.MenuType.REWARD_WIN_ITEMS) {
+            if (event.getClickedInventory() != null && event.getClickedInventory().equals(player.getInventory())) {
+                if (event.isShiftClick()) { event.setCancelled(true); player.sendMessage("§cTarik itemnya manual (Drag & Drop) ke kotak atas."); }
+                return;
+            }
+            if (event.getRawSlot() < 45) {
+                if (event.getCursor() != null && event.getCursor().getType() != Material.AIR) {
+                    event.setCancelled(true);
+                    SeriaCrate.getInstance().getRewardManager().addRewardWinItem(holder.getCrateId(), holder.getTierId(), holder.getRewardIndex(), event.getCursor().clone());
+                    player.sendMessage("§aItem fisik berhasil ditambahkan!");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    EditorMenuManager.openRewardWinItemsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                    return;
+                }
+            }
+        }
 
-        event.setCancelled(true);
-        if (event.getCurrentItem() == null) return;
-        String itemName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
+        event.setCancelled(true); 
+        if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
+        String itemName = "";
+        if (event.getCurrentItem().hasItemMeta() && event.getCurrentItem().getItemMeta().hasDisplayName()) {
+            itemName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
+        }
 
         switch (holder.getType()) {
             case MAIN_MENU:
-                if (itemName.equals("+ Buat Crate Baru")) {
+                if (itemName.contains("Buat Crate Baru")) {
                     player.closeInventory();
-                    player.sendMessage("§e[SeriaCrate] Ketik nama Crate baru di chat (tanpa spasi).");
-                    activePrompts.put(player.getUniqueId(), new ChatPrompt("CREATE_CRATE", null, -1));
-                } else if (!itemName.isEmpty() && !itemName.equals(" ")) {
+                    player.sendMessage("§eKetik nama Crate baru di chat.");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("CREATE_CRATE", null, null, -1));
+                } else if (!itemName.isEmpty() && event.getRawSlot() < 45) {
                     EditorMenuManager.openCrateSettings(player, itemName.toLowerCase());
                 }
                 break;
 
             case CRATE_SETTINGS:
-                if (itemName.equals("Edit Rewards")) EditorMenuManager.openTierSelection(player, holder.getCrateId());
-                else if (itemName.equals("Ubah Blok Fisik")) EditorMenuManager.openBlockEditor(player, holder.getCrateId());
-                else if (itemName.equals("Edit Hologram")) EditorMenuManager.openHologramEditor(player, holder.getCrateId());
-                else if (itemName.equals("Ambil Crate Item")) {
-                    player.getInventory().addItem(id.seria.crate.util.ItemUtils.getCrateItem(holder.getCrateId()));
-                    player.sendMessage("§a[SeriaCrate] Item Crate ditambahkan ke inventory!");
-                }
-                else if (itemName.equals("Kembali")) EditorMenuManager.openMainMenu(player);
-                break;
-
-            case HOLOGRAM_EDITOR:
-                if (itemName.equals("Kembali")) {
+                File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
+                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+                
+                if (itemName.contains("Tipe Crate")) {
+                    config.set("crate-settings.is-temporary", !config.getBoolean("crate-settings.is-temporary", false));
+                    save(config, file); EditorMenuManager.openCrateSettings(player, holder.getCrateId());
+                } else if (itemName.contains("Durasi")) {
+                    player.closeInventory(); player.sendMessage("§eKetik durasi timer baru (dalam detik).");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_DURATION", holder.getCrateId(), null, -1));
+                } else if (itemName.contains("Rewards")) {
+                    EditorMenuManager.openTierSelection(player, holder.getCrateId());
+                } 
+                // ==========================================
+                // [TAMBAHAN BARU] Logika Toggle Hologram
+                // ==========================================
+                else if (itemName.contains("Hologram")) {
+                    boolean currentHolo = config.getBoolean("crate-settings.hologram", true);
+                    config.set("crate-settings.hologram", !currentHolo); 
+                    save(config, file);
+                    player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
+                    
+                    // [TAMBAHAN] Auto Reload Hologram di World saat diedit
+                    SeriaCrate.getInstance().getLocationManager().loadLocations(); 
+                    
                     EditorMenuManager.openCrateSettings(player, holder.getCrateId());
-                } else if (itemName.equals("+ Tambah Baris")) {
-                    player.closeInventory();
-                    player.sendMessage("§eKetik teks untuk baris baru di chat. (Gunakan & untuk warna)");
-                    activePrompts.put(player.getUniqueId(), new ChatPrompt("ADD_LINE", holder.getCrateId(), -1));
-                } else if (itemName.startsWith("Baris ")) {
-                    int lineIdx = Integer.parseInt(itemName.replace("Baris ", "")) - 1;
-                    if (event.isRightClick()) {
-                        deleteHologramLine(holder.getCrateId(), lineIdx);
-                        EditorMenuManager.openHologramEditor(player, holder.getCrateId()); 
-                    } else if (event.isLeftClick()) {
-                        player.closeInventory();
-                        player.sendMessage("§eKetik teks pengganti untuk baris " + (lineIdx + 1) + ". (Ketik 'batal')");
-                        activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_LINE", holder.getCrateId(), lineIdx));
-                    }
+                } 
+                // ==========================================
+                else if (itemName.contains("Blok Fisik")) {
+                    EditorMenuManager.openBlockEditor(player, holder.getCrateId(), 0); 
+                } else if (itemName.contains("Ambil Crate")) {
+                    player.getInventory().addItem(id.seria.crate.util.ItemUtils.getCrateItem(holder.getCrateId()));
+                } else if (itemName.contains("Kembali")) {
+                    EditorMenuManager.openMainMenu(player);
                 }
                 break;
 
             case TIER_SELECTION:
-                if (itemName.equals("Kembali")) EditorMenuManager.openCrateSettings(player, holder.getCrateId());
-                else if (itemName.startsWith("TIER ")) {
-                    EditorMenuManager.openItemEditor(player, holder.getCrateId(), itemName.replace("TIER ", "").toLowerCase());
+                if (itemName.contains("Kembali")) EditorMenuManager.openCrateSettings(player, holder.getCrateId());
+                else if (itemName.startsWith("TIER ")) EditorMenuManager.openRewardList(player, holder.getCrateId(), itemName.replace("TIER ", "").toLowerCase());
+                break;
+
+            case REWARD_LIST:
+                if (itemName.contains("Kembali")) EditorMenuManager.openTierSelection(player, holder.getCrateId());
+                else if (itemName.contains("Refresh") || event.getCurrentItem().getType() == Material.REPEATER) EditorMenuManager.openRewardList(player, holder.getCrateId(), holder.getTierId());
+                else if (itemName.contains("Tambah Reward") || event.getCurrentItem().getType() == Material.LIME_STAINED_GLASS_PANE) {
+                    int newIndex = SeriaCrate.getInstance().getRewardManager().createDefaultReward(holder.getCrateId(), holder.getTierId());
+                    EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), newIndex);
+                } else if (event.getRawSlot() >= 9 && event.getRawSlot() <= 44) {
+                    NamespacedKey idKey = new NamespacedKey(SeriaCrate.getInstance(), "gui_reward_id");
+                    if (event.getCurrentItem().getItemMeta() != null && event.getCurrentItem().getItemMeta().getPersistentDataContainer().has(idKey, PersistentDataType.STRING)) {
+                        int rewardIndex = Integer.parseInt(event.getCurrentItem().getItemMeta().getPersistentDataContainer().get(idKey, PersistentDataType.STRING));
+                        if (event.getClick() == ClickType.SHIFT_RIGHT) {
+                            SeriaCrate.getInstance().getRewardManager().deleteReward(holder.getCrateId(), holder.getTierId(), rewardIndex);
+                            EditorMenuManager.openRewardList(player, holder.getCrateId(), holder.getTierId());
+                        } else if (event.getClick() == ClickType.LEFT) EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), rewardIndex);
+                    }
                 }
                 break;
 
-            case ITEM_EDITOR:
-                if (itemName.equals("Simpan & Kembali")) {
-                    player.sendMessage("§eMenyimpan Rewards...");
-                    ItemStack[] itemsToSave = new ItemStack[45];
-                    for (int i = 0; i < 45; i++) itemsToSave[i] = event.getInventory().getItem(i);
-                    SeriaCrate.getInstance().getRewardManager().saveRewardsFromEditor(holder.getCrateId(), holder.getTierId(), itemsToSave);
-                    player.sendMessage("§aTersimpan!");
-                    EditorMenuManager.openTierSelection(player, holder.getCrateId());
+            case REWARD_EDIT:
+                // KITA GUNAKAN PENGECEKAN SLOT AGAR 100% ANTI-GAGAL!
+                if (event.getRawSlot() == 20) { 
+                    // Slot 20 = Shulker Box (Menu Multi Item)
+                    EditorMenuManager.openRewardWinItemsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                } 
+                else if (event.getRawSlot() == 21) { 
+                    // Slot 21 = Command Block (Menu Multi Command)
+                    EditorMenuManager.openRewardCommandsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                } 
+                else if (event.getRawSlot() == 22) { 
+                    // Slot 22 = Goat Horn (Toggle Broadcast)
+                    File f = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
+                    FileConfiguration c = YamlConfiguration.loadConfiguration(f);
+                    String path = "tiers." + holder.getTierId() + "." + holder.getRewardIndex() + ".broadcast";
+                    c.set(path, !c.getBoolean(path, false));
+                    save(c, f); SeriaCrate.getInstance().getRewardManager().loadRewards();
+                    EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                    player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
+                }
+                else if (event.getRawSlot() == 23) { 
+                    // Slot 23 = Gold Ingot (Ubah Weight)
+                    player.closeInventory(); player.sendMessage("§e[SeriaCrate] Ketik Peluang (Weight) baru:");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_WEIGHT", holder.getCrateId(), holder.getTierId(), holder.getRewardIndex()));
+                } 
+                else if (event.getRawSlot() == 24) { 
+                    // Slot 24 = Emerald (Ubah Amount)
+                    player.closeInventory(); player.sendMessage("§e[SeriaCrate] Ketik Jumlah (Amount) UI baru:");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_AMOUNT", holder.getCrateId(), holder.getTierId(), holder.getRewardIndex()));
+                } 
+                else if (event.getRawSlot() == 51 || itemName.contains("Kembali")) { 
+                    // Tombol Barrier (Kembali)
+                    EditorMenuManager.openRewardList(player, holder.getCrateId(), holder.getTierId());
+                }
+                break;
+
+            case REWARD_WIN_ITEMS:
+                if (itemName.contains("Kembali")) EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                else if (event.getRawSlot() < 45) {
+                    NamespacedKey idxKey = new NamespacedKey(SeriaCrate.getInstance(), "gui_list_index");
+                    if (event.getCurrentItem().getItemMeta() != null && event.getCurrentItem().getItemMeta().getPersistentDataContainer().has(idxKey, PersistentDataType.INTEGER)) {
+                        if (event.getClick() == ClickType.SHIFT_RIGHT) {
+                            int targetIdx = event.getCurrentItem().getItemMeta().getPersistentDataContainer().get(idxKey, PersistentDataType.INTEGER);
+                            SeriaCrate.getInstance().getRewardManager().removeRewardWinItem(holder.getCrateId(), holder.getTierId(), holder.getRewardIndex(), targetIdx);
+                            EditorMenuManager.openRewardWinItemsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                        }
+                    }
+                }
+                break;
+
+            case REWARD_COMMANDS:
+                if (itemName.contains("Kembali")) EditorMenuManager.openRewardEdit(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                else if (itemName.contains("Tambah Command")) {
+                    player.closeInventory(); player.sendMessage("§eKetik perintah console baru (tanpa /):");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("ADD_MULTI_COMMAND", holder.getCrateId(), holder.getTierId(), holder.getRewardIndex()));
+                } else if (event.getRawSlot() < 45) {
+                    NamespacedKey idxKey = new NamespacedKey(SeriaCrate.getInstance(), "gui_list_index");
+                    if (event.getCurrentItem().getItemMeta() != null && event.getCurrentItem().getItemMeta().getPersistentDataContainer().has(idxKey, PersistentDataType.INTEGER)) {
+                        if (event.getClick() == ClickType.LEFT) {
+                            int targetIdx = event.getCurrentItem().getItemMeta().getPersistentDataContainer().get(idxKey, PersistentDataType.INTEGER);
+                            SeriaCrate.getInstance().getRewardManager().removeRewardCommand(holder.getCrateId(), holder.getTierId(), holder.getRewardIndex(), targetIdx);
+                            EditorMenuManager.openRewardCommandsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
+                        }
+                    }
                 }
                 break;
 
             case BLOCK_EDITOR:
-                if (itemName.equals("Simpan & Kembali")) {
-                    ItemStack blockItem = event.getInventory().getItem(13);
-                    if (blockItem != null && blockItem.getType().isBlock()) {
-                        File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
-                        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-                        config.set("crate-settings.block", blockItem.getType().name());
-                        try { config.save(file); } catch (IOException ignored) {}
-                        player.sendMessage("§aBlok tampilan diubah!");
-                    }
+                if (itemName.contains("Kembali")) {
+                    EditorMenuManager.openCrateSettings(player, holder.getCrateId());
+                } 
+                else if (itemName.contains("Halaman Sebelumnya")) {
+                    EditorMenuManager.openBlockEditor(player, holder.getCrateId(), holder.getRewardIndex() - 1);
+                } 
+                else if (itemName.contains("Halaman Berikutnya")) {
+                    EditorMenuManager.openBlockEditor(player, holder.getCrateId(), holder.getRewardIndex() + 1);
+                } 
+                // Jika player mengklik salah satu Blok (Slot 0 - 44)
+                else if (event.getRawSlot() < 45 && event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
+                    Material selectedBlock = event.getCurrentItem().getType();
+                    
+                    File f = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
+                    FileConfiguration c = YamlConfiguration.loadConfiguration(f);
+                    
+                    // Simpan tipe blok ke config
+                    c.set("crate-settings.block", selectedBlock.name());
+                    save(c, f);
+                    
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    player.sendMessage("§aWujud crate berhasil diubah menjadi " + selectedBlock.name());
+                    
+                    // Kembalikan ke menu Settings
                     EditorMenuManager.openCrateSettings(player, holder.getCrateId());
                 }
                 break;
         }
     }
+
+    private void save(FileConfiguration config, File file) { try { config.save(file); } catch (IOException ignored) {} }
 
     @EventHandler
     public void onChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         if (!activePrompts.containsKey(player.getUniqueId())) return;
-
         event.setCancelled(true);
         ChatPrompt prompt = activePrompts.remove(player.getUniqueId());
-        String msg = event.getMessage();
-
         Bukkit.getScheduler().runTask(SeriaCrate.getInstance(), () -> {
+            String msg = event.getMessage();
             if (msg.equalsIgnoreCase("batal")) {
-                if (prompt.crateId != null) EditorMenuManager.openHologramEditor(player, prompt.crateId);
+                player.sendMessage("§cDibatalkan.");
+                if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT") || prompt.type.contains("COMMAND")) {
+                    EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                }
                 return;
             }
 
-            FileConfiguration holoConfig = SeriaCrate.getInstance().getConfigManager().getHologram();
+            File f = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), prompt.crateId + ".yml");
+            FileConfiguration c = YamlConfiguration.loadConfiguration(f);
 
-            if (prompt.type.equals("CREATE_CRATE")) {
-                String newCrateName = msg.toLowerCase().replace(" ", "_");
-                
-                // 1. Buat file crate baru
-                File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), newCrateName + ".yml");
-                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-                config.set("crate-settings.block", "ENDER_CHEST");
-                try { config.save(file); } catch (IOException ignored) {}
+            if (prompt.type.equals("ADD_MULTI_COMMAND")) {
+                SeriaCrate.getInstance().getRewardManager().addRewardCommand(prompt.crateId, prompt.tierId, prompt.dataIndex, msg);
+                EditorMenuManager.openRewardCommandsMenu(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                player.sendMessage("§aCommand ditambahkan!");
+                return;
+            }
 
-                // 2. Set default hologram
-                holoConfig.set("holograms." + newCrateName, java.util.Arrays.asList("&e&l" + newCrateName.toUpperCase() + " CRATE", "&7Menghilang dalam: &c%timer%", "&fKlik Kiri: &aPreview", "&fKlik Kanan: &eBuka"));
-                SeriaCrate.getInstance().getConfigManager().saveHologram();
-
-                SeriaCrate.getInstance().getRewardManager().loadRewards();
-                player.sendMessage("§aCrate " + newCrateName + " berhasil dibuat!");
-                EditorMenuManager.openCrateSettings(player, newCrateName);
-            } 
-            else if (prompt.type.equals("ADD_LINE")) {
-                List<String> lines = holoConfig.getStringList("holograms." + prompt.crateId);
-                lines.add(msg);
-                holoConfig.set("holograms." + prompt.crateId, lines);
-                SeriaCrate.getInstance().getConfigManager().saveHologram();
-                EditorMenuManager.openHologramEditor(player, prompt.crateId);
-            } 
-            else if (prompt.type.equals("EDIT_LINE")) {
-                List<String> lines = holoConfig.getStringList("holograms." + prompt.crateId);
-                if (prompt.lineIndex < lines.size()) {
-                    lines.set(prompt.lineIndex, msg);
-                    holoConfig.set("holograms." + prompt.crateId, lines);
-                    SeriaCrate.getInstance().getConfigManager().saveHologram();
+            try {
+                int number = Integer.parseInt(msg);
+                if (prompt.type.equals("EDIT_DURATION")) {
+                    c.set("crate-settings.duration", number); save(c, f);
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
+                } else if (prompt.type.equals("EDIT_WEIGHT")) {
+                    c.set("tiers." + prompt.tierId + "." + prompt.dataIndex + ".weight", number); save(c, f);
+                    SeriaCrate.getInstance().getRewardManager().loadRewards();
+                    EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                } else if (prompt.type.equals("EDIT_AMOUNT")) {
+                    c.set("tiers." + prompt.tierId + "." + prompt.dataIndex + ".amount", number); save(c, f);
+                    SeriaCrate.getInstance().getRewardManager().loadRewards();
+                    EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
                 }
-                EditorMenuManager.openHologramEditor(player, prompt.crateId);
+            } catch (NumberFormatException e) {
+                player.sendMessage("§cHarus angka bulat!");
+                if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT")) EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
             }
         });
-    }
-
-    private void deleteHologramLine(String crateId, int index) {
-        FileConfiguration config = SeriaCrate.getInstance().getConfigManager().getHologram();
-        List<String> lines = config.getStringList("holograms." + crateId);
-        if (index < lines.size()) {
-            lines.remove(index);
-            config.set("holograms." + crateId, lines);
-            SeriaCrate.getInstance().getConfigManager().saveHologram();
-        }
     }
 }

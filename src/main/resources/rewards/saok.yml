@@ -1,5 +1,14 @@
 crate-settings:
+  crate-settings:
   block: ENDER_CHEST
+  hologram: true
+  duration: 180
+  tier-chance:
+    s: 1.0   # Peluang S Tier (Sangat Langka)
+    a: 9.0
+    b: 20.0
+    c: 30.0
+    d: 40.0
 tiers:
   s:
     1:

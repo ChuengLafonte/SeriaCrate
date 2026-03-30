@@ -11,6 +11,7 @@ settings:
   # Durasi maksimal animasi putaran (ticks)
   max-rolling-duration-ticks: 60
 
+
 temporary-crate:
   enabled: true
   # Berapa lama peti muncul di dunia sebelum hilang
@@ -21,3 +22,9 @@ hooks:
   mmoitems: true
   ecopets: true
   vault: true
+
+GUI:
+  # Format judul saat pemain membuka crate. Sangat penting untuk mencegah bug klik!
+  # Variabel yang tersedia: %boss% (Nama Boss), %tier% (Tier)
+  # JANGAN hapus kata "Reward Crate", karena digunakan sistem untuk memblokir klik pemain.
+  TitleFormat: "&8Reward Crate %boss% - Tier %tier%"

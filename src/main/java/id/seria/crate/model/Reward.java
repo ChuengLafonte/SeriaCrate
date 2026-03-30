@@ -1,38 +1,28 @@
 package id.seria.crate.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 
 public class Reward {
-    private String type, materialPath, displayName, enchant, command;
-    private int weight, amount;
-    private List<String> lore;
-    private boolean hideEnchant;
-    private ItemStack guiItem; // VARIABEL BARU
+    private final int weight;
+    private final int amount;
+    private final ItemStack displayItem;
+    private final List<String> commands;
+    private final List<String> winItemsClean;
 
-    public Reward(String type, String materialPath, int weight, int amount, String displayName, 
-                  List<String> lore, String enchant, boolean hideEnchant, String command, ItemStack guiItem) {
-        this.type = type;
-        this.materialPath = materialPath;
+    public Reward(int weight, int amount, ItemStack displayItem, List<String> commands, List<String> winItemsClean) {
         this.weight = weight;
         this.amount = amount;
-        this.displayName = displayName;
-        this.lore = lore;
-        this.enchant = enchant;
-        this.hideEnchant = hideEnchant;
-        this.command = command;
-        this.guiItem = guiItem;
+        this.displayItem = displayItem;
+        this.commands = commands != null ? commands : new ArrayList<>();
+        this.winItemsClean = winItemsClean != null ? winItemsClean : new ArrayList<>();
     }
 
-    public String getType() { return type; }
-    public String getMaterialPath() { return materialPath; }
     public int getWeight() { return weight; }
     public int getAmount() { return amount; }
-    public String getDisplayName() { return displayName; }
-    public List<String> getLore() { return lore; }
-    public String getEnchant() { return enchant; }
-    public boolean isHideEnchant() { return hideEnchant; }
-    public String getCommand() { return command; }
-    public ItemStack getGuiItem() { return guiItem; } // GETTER BARU
+    public ItemStack getDisplayItem() { return displayItem; }
+    public List<String> getCommands() { return commands; }
+    public List<String> getWinItemsClean() { return winItemsClean; }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -20,91 +21,120 @@ public class RollingEngine {
     private final SeriaCrate plugin;
     private final Random random = new Random();
 
-    public RollingEngine(SeriaCrate plugin) {
-        this.plugin = plugin;
+    public RollingEngine(SeriaCrate plugin) { 
+        this.plugin = plugin; 
     }
 
-    public void startRolling(Player player, Inventory inv, List<Reward> availableRewards) {
-        List<Reward> sequence = new ArrayList<>();
-        for (int i = 0; i < 50; i++) {
-            sequence.add(getRandomWeighted(availableRewards));
-        }
-
-        new BukkitRunnable() {
-            int step = 0;
-            int maxSteps = 30;
-            int currentDelay = 1;
-
-            @Override
-            public void run() {
-                if (step >= maxSteps) {
-                    Reward win = sequence.get(step + 3); // Ambil item tengah
-                    giveReward(player, win);
-                    this.cancel();
-                    return;
-                }
-
-                for (int i = 0; i < 7; i++) {
-                    inv.setItem(10 + i, ItemUtils.buildRewardItem(sequence.get(step + i)));
-                }
-                
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_XYLOPHONE, 0.5f, 1.5f);
-                step++;
-
-                // Logika melambat sederhana
-                if (step > 20) {
-                    this.cancel();
-                    int nextDelay = (step > 25) ? 5 : 3;
-                    new BukkitRunnable() { 
-                        @Override public void run() { 
-                            // Ini memicu rekursi sederhana untuk simulasi melambat
-                            continueRolling(this, player, inv, sequence, step, maxSteps, nextDelay);
-                        }
-                    }.runTaskLater(plugin, nextDelay);
-                }
-            }
-
-            public int getCurrentDelay() {
-                return currentDelay;
-            }
-
-            public void setCurrentDelay(int currentDelay) {
-                this.currentDelay = currentDelay;
-            }
-        }.runTaskTimer(plugin, 0, 1);
-    }
-
-    // Fungsi pembantu untuk melanjutkan rolling saat melambat
-    private void continueRolling(BukkitRunnable task, Player p, Inventory inv, List<Reward> seq, int step, int max, int delay) {
-        // Logika repetisi di sini... (untuk mempersingkat, pastikan variabel terdefinisi)
-    }
-
-    private Reward getRandomWeighted(List<Reward> rewards) {
-        int total = rewards.stream().mapToInt(Reward::getWeight).sum();
-        int r = random.nextInt(total);
-        int current = 0;
-        for (Reward re : rewards) {
-            current += re.getWeight();
-            if (r < current) return re;
+    public Reward getRandomWeighted(List<Reward> rewards) {
+        int totalWeight = 0;
+        for (Reward reward : rewards) totalWeight += reward.getWeight();
+        if (totalWeight <= 0) return rewards.get(0);
+        
+        int rand = random.nextInt(totalWeight);
+        int currentWeight = 0;
+        for (Reward reward : rewards) {
+            currentWeight += reward.getWeight();
+            if (rand < currentWeight) return reward;
         }
         return rewards.get(0);
     }
 
-    private void giveReward(Player player, Reward reward) {
-        if (reward.getCommand() != null && reward.getCommand().startsWith("eco give")) {
-            // Tarik angka dari command (contoh: "eco give %player% 50000")
-            String[] parts = reward.getCommand().split(" ");
-            try {
-                double amount = Double.parseDouble(parts[3]);
-                SeriaCrate.getInstance().getEconomy().depositPlayer(player, amount);
-            } catch (Exception ignored) {}
-        } else if (reward.getCommand() != null) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), reward.getCommand().replace("%player%", player.getName()));
+    public void startRolling(final Player player, final Inventory inv, List<Reward> availableRewards) {
+        final int maxSteps = 45; 
+        final List<Reward> sequence = new ArrayList<>();
+        
+        for (int i = 0; i < maxSteps + 9; i++) {
+            sequence.add(this.getRandomWeighted(availableRewards));
         }
 
-        if (reward.getType().equals("ITEM") || reward.getType().equals("PET")) {
-            player.getInventory().addItem(ItemUtils.buildRewardItem(reward));
+        // Item pemenang ditentukan di awal, sebelum animasi berjalan
+        final Reward winningReward = sequence.get(maxSteps + 3);
+
+        new BukkitRunnable() {
+            int step = 0;
+            int ticks = 0;
+            int delay = 1; 
+
+            @Override
+            public void run() {
+                // ANTI-EXPLOIT: Jika pemain DC atau dengan sengaja menekan 'ESC' / menutup inventory
+                if (!player.isOnline() || !player.getOpenInventory().getTopInventory().equals(inv)) {
+                    giveReward(player, winningReward); // Berikan item pemenang secara instan
+                    this.cancel(); // Matikan task
+                    return;
+                }
+
+                ticks++;
+                
+                if (ticks >= delay) {
+                    ticks = 0; 
+                    
+                    for (int i = 0; i < 9; i++) {
+                        inv.setItem(9 + i, ItemUtils.buildRewardItem(sequence.get(step + i)));
+                    }
+                    
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.8F, 1.5F);
+                    step++;
+
+                    // Saat putaran selesai
+                    if (step >= maxSteps) {
+                        this.cancel(); // Matikan task
+                        
+                        giveReward(player, winningReward); // Berikan hadiah
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+                        
+                        // Berikan jeda 1.5 detik untuk melihat item kemenangannya sebelum GUI tertutup
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (player.isOnline() && player.getOpenInventory().getTopInventory().equals(inv)) {
+                                    player.closeInventory();
+                                }
+                            }
+                        }.runTaskLater(plugin, 30L);
+                        
+                    } else if (step >= maxSteps * 0.85) {
+                        delay = 8; 
+                    } else if (step >= maxSteps * 0.70) {
+                        delay = 5; 
+                    } else if (step >= maxSteps * 0.50) {
+                        delay = 3;
+                    } else if (step >= maxSteps * 0.30) {
+                        delay = 2;
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 1L); 
+    }
+
+    public void giveReward(Player player, Reward win) {
+        boolean hasGivenAnything = false;
+
+        if (win.getWinItemsClean() != null) {
+            for (String cleanStr : win.getWinItemsClean()) {
+                ItemStack item = ItemUtils.deserializeItemClean(cleanStr);
+                if (item != null && item.getType() != Material.STONE) {
+                    player.getInventory().addItem(item);
+                    hasGivenAnything = true;
+                }
+            }
         }
-        player.sendMessage("§a§lSeriaCrate §7» §fSelamat! Kamu dapet §e" + (reward.getDisplayName() != null ? reward.getDisplayName() : "Hadiah"));
+
+        if (win.getCommands() != null) {
+            for (String cmd : win.getCommands()) {
+                String finalCmd = cmd.replace("%player%", player.getName()).replace("%player_name%", player.getName());
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
+                hasGivenAnything = true;
+            }
+        }
+
+        if (!hasGivenAnything && win.getDisplayItem() != null) {
+            ItemStack fallback = win.getDisplayItem().clone();
+            fallback.setAmount(win.getAmount());
+            player.getInventory().addItem(fallback);
+        }
+
+        String prefix = org.bukkit.ChatColor.translateAlternateColorCodes('&', plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] "));
+        player.sendMessage(prefix + "§fSelamat! Kamu memenangkan hadiah dari crate!");
     }
 }

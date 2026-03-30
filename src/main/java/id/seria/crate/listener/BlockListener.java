@@ -1,121 +1,198 @@
 package id.seria.crate.listener;
 
+import java.io.File;
 import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import id.seria.crate.SeriaCrate;
+import id.seria.crate.engine.RollingEngine;
+import id.seria.crate.gui.CrateGUI;
+import id.seria.crate.gui.PreviewGUI;
 import id.seria.crate.manager.TemporaryCrateManager;
 import id.seria.crate.model.Reward;
 
 public class BlockListener implements Listener {
+   private final SeriaCrate plugin;
 
-    private final SeriaCrate plugin;
+   public BlockListener(SeriaCrate plugin) {
+      this.plugin = plugin;
+   }
 
-    public BlockListener(SeriaCrate plugin) {
-        this.plugin = plugin;
-    }
+   @EventHandler
+   public void onCrateInteract(PlayerInteractEvent event) {
+      if (event.getHand() == EquipmentSlot.HAND) {
+         if (event.getClickedBlock() != null) {
+            Location loc = event.getClickedBlock().getLocation();
+            Player player = event.getPlayer();
+            String bossName = this.plugin.getLocationManager().getCrateAt(loc);
+            boolean isTemporary = false;
+            TemporaryCrateManager.ActiveCrate tempCrate = null;
 
-    @EventHandler
-    public void onCrateInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) return;
-        if (event.getClickedBlock() == null) return;
-
-        Location loc = event.getClickedBlock().getLocation();
-        Player player = event.getPlayer();
-        
-        // 1. CEK APAKAH INI CRATE (Bisa Permanen atau Sementara)
-        String bossName = plugin.getLocationManager().getCrateAt(loc); // Cek Permanen
-        boolean isTemporary = false;
-        
-        if (bossName == null) {
-            // Jika tidak ada di permanen, cek di sementara
-            TemporaryCrateManager.ActiveCrate tempCrate = plugin.getTempCrateManager().getCrateAt(loc);
-            if (tempCrate != null) {
-                bossName = tempCrate.bossName;
-                isTemporary = true;
+            if (bossName == null) {
+               tempCrate = this.plugin.getTempCrateManager().getCrateAt(loc);
+               if (tempCrate != null) {
+                  bossName = tempCrate.bossName;
+                  isTemporary = true;
+               }
             }
-        }
 
-        if (bossName == null) return; // Bukan crate, abaikan.
+            if (bossName != null) {
+               event.setCancelled(true); // Batalkan interaksi Vanilla (mencegah chest terbuka biasa)
 
-        event.setCancelled(true);
+               // ===========================================
+               // [FITUR BARU] SHIFT + KLIK KIRI UNTUK ADMIN MENGHAPUS
+               // ===========================================
+               if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+                  if (player.isSneaking() && (player.isOp() || player.hasPermission("seriacrate.admin"))) {
+                     if (isTemporary) {
+                        tempCrate.timeLeft = 0; // Memaksa updater menghancurkan Crate Sementara
+                     } else {
+                        this.plugin.getLocationManager().removeCrateLocation(loc); // Hapus Crate Permanen
+                     }
+                     loc.getBlock().setType(Material.AIR);
+                     player.sendMessage("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihancurkan paksa!");
+                     return;
+                  }
+                  // Jika bukan admin/tidak shift, buka Preview
+                  player.openInventory(PreviewGUI.createPreview(bossName));
+               } 
+               // ===========================================
+               // KLIK KANAN UNTUK ROLL HADIAH
+               // ===========================================
+               else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                  if (isTemporary) {
+                     if (tempCrate.claimedPlayers.contains(player.getUniqueId())) {
+                        String prefix = this.plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] ");
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', prefix + "&cKamu sudah mengambil hadiah di crate ini!"));
+                        return;
+                     }
+                  }
 
-        // 2. LOGIKA KLIK KIRI (PREVIEW)
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            player.openInventory(id.seria.crate.gui.PreviewGUI.createPreview(bossName));
-            return;
-        }
+                  // 1. Baca konfigurasi boss crate
+                  java.io.File file = new java.io.File(this.plugin.getConfigManager().getRewardsFolder(), bossName + ".yml");
+                  org.bukkit.configuration.file.FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
 
-        // 3. LOGIKA KLIK KANAN (BUKA GACHA)
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                  // 2. GACHA TIER (Ambil peluang dari file boss, jika tidak ada, gunakan nilai default)
+                  String tierToRoll = "d"; 
+                  double chanceS = config.getDouble("crate-settings.tier-chance.s", 5.0);  
+                  double chanceA = config.getDouble("crate-settings.tier-chance.a", 15.0); 
+                  double chanceB = config.getDouble("crate-settings.tier-chance.b", 25.0); 
+                  double chanceC = config.getDouble("crate-settings.tier-chance.c", 25.0); 
+                  double chanceD = config.getDouble("crate-settings.tier-chance.d", 30.0); 
+
+                  double totalWeight = chanceS + chanceA + chanceB + chanceC + chanceD;
+                  double randomVal = Math.random() * totalWeight;
+
+                  if (randomVal < chanceS) {
+                      tierToRoll = "s";
+                  } else if (randomVal < chanceS + chanceA) {
+                      tierToRoll = "a";
+                  } else if (randomVal < chanceS + chanceA + chanceB) {
+                      tierToRoll = "b";
+                  } else if (randomVal < chanceS + chanceA + chanceB + chanceC) {
+                      tierToRoll = "c";
+                  } else {
+                      tierToRoll = "d";
+                  }
+
+                  // 3. Ambil isi hadiah sesuai Tier yang dimenangkan
+                  List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
+                  
+                  if (pool == null || pool.isEmpty()) {
+                     player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll.toUpperCase());
+                     return; 
+                  }
+
+                  try {
+                      RollingEngine engine = new RollingEngine(this.plugin);
+                      
+                      // 4. INSTANT OPEN DENGAN SHIFT + KLIK KANAN
+                      if (player.isSneaking()) {
+                          Reward instantWin = engine.getRandomWeighted(pool);
+                          engine.giveReward(player, instantWin);
+                          player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+                          
+                          if (isTemporary) {
+                             tempCrate.claimedPlayers.add(player.getUniqueId());
+                          }
+                          return; // Proses selesai di sini
+                      }
+                      
+                      // 5. NORMAL OPEN DENGAN ANIMASI ROULETTE
+                      Inventory inv = CrateGUI.createOpeningGUI(bossName, tierToRoll);
+                      player.openInventory(inv);
+                      engine.startRolling(player, inv, pool);
+                      
+                      if (isTemporary) {
+                         tempCrate.claimedPlayers.add(player.getUniqueId());
+                      }
+                  } catch (Exception e) {
+                      player.sendMessage("§cTerjadi kesalahan saat membuka Crate! Silakan lapor ke Admin.");
+                      e.printStackTrace();
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   @EventHandler
+   public void onCratePlace(BlockPlaceEvent event) {
+      ItemStack item = event.getItemInHand();
+      if (item != null && item.hasItemMeta()) {
+         NamespacedKey key = new NamespacedKey(this.plugin, "crate_id");
+         if (item.getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
+            String boss = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
             
-            // Cek apakah sudah diklaim (Khusus Crate Sementara)
-            if (isTemporary) {
-                TemporaryCrateManager.ActiveCrate tempCrate = plugin.getTempCrateManager().getCrateAt(loc);
-                if (tempCrate.claimedPlayers.contains(player.getUniqueId())) {
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                        plugin.getConfigManager().getConfig().getString("settings.prefix") + "&cKamu sudah mengambil hadiah!"));
-                    return;
-                }
-                tempCrate.claimedPlayers.add(player.getUniqueId());
-            }
-
-            // AMBIL POOL HADIAH (Default ke Tier S atau buat logika gacha tier di sini)
-            String tierToRoll = "s"; 
-            List<Reward> pool = plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
-
-            if (pool.isEmpty()) {
-                player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll);
-                return;
-            }
-
-            // BUKA GUI DAN JALANKAN ROLLING
-            Inventory inv = id.seria.crate.gui.CrateGUI.createOpeningGUI(bossName, tierToRoll);
-            player.openInventory(inv);
+            // ===========================================
+            // [PERBAIKAN] CEK APAKAH INI TEMPORARY/PERMANEN DARI CONFIG
+            // ===========================================
+            File file = new File(plugin.getConfigManager().getRewardsFolder(), boss + ".yml");
+            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+            boolean isTemp = config.getBoolean("crate-settings.is-temporary", false);
             
-            // PENTING: Gunakan plugin instance agar RollingEngine bisa berjalan
-            new id.seria.crate.engine.RollingEngine(plugin).startRolling(player, inv, pool);
-        }
-    }
-    // FUNGSI BARU: Saat admin meletakkan Crate Item di lantai
-    @EventHandler
-    public void onCratePlace(org.bukkit.event.block.BlockPlaceEvent event) {
-        org.bukkit.inventory.ItemStack item = event.getItemInHand();
-        if (item == null || !item.hasItemMeta()) return;
-
-        org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "crate_id");
-        if (item.getItemMeta().getPersistentDataContainer().has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
-            String boss = item.getItemMeta().getPersistentDataContainer().get(key, org.bukkit.persistence.PersistentDataType.STRING);
-
-            // Langsung daftarkan sebagai crate permanen!
-            plugin.getLocationManager().setCrateLocation(event.getBlock().getLocation(), boss);
-            event.getPlayer().sendMessage("§a[SeriaCrate] Crate permanen " + boss.toUpperCase() + " berhasil diletakkan!");
-        }
-    }
-
-    // FUNGSI BARU: Saat admin menghancurkan Crate untuk menghapusnya
-    @EventHandler
-    public void onCrateBreak(org.bukkit.event.block.BlockBreakEvent event) {
-        String bossName = plugin.getLocationManager().getCrateAt(event.getBlock().getLocation());
-        if (bossName != null) {
-            // Jika pemain adalah admin dan sedang SNEAK (Jongkok), hapus crate
-            if (event.getPlayer().hasPermission("seriacrate.admin") && event.getPlayer().isSneaking()) {
-                plugin.getLocationManager().removeCrateLocation(event.getBlock().getLocation());
-                event.getPlayer().sendMessage("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihapus dari dunia!");
+            if (isTemp) {
+               this.plugin.getTempCrateManager().spawnTemporaryCrate(event.getBlock().getLocation(), boss);
+               event.getPlayer().sendMessage("§a[SeriaCrate] Crate SEMENTARA " + boss.toUpperCase() + " berhasil diletakkan!");
             } else {
-                // Cegah pemain biasa menghancurkan Crate
-                event.setCancelled(true);
-                event.getPlayer().sendMessage("§cIni adalah Crate! (Admin: Tahan SHIFT + Hancurkan untuk menghapus)");
+               this.plugin.getLocationManager().setCrateLocation(event.getBlock().getLocation(), boss);
+               event.getPlayer().sendMessage("§a[SeriaCrate] Crate PERMANEN " + boss.toUpperCase() + " berhasil diletakkan!");
             }
-        }
-    }
+         }
+      }
+   }
+
+   @EventHandler
+   public void onCrateBreak(BlockBreakEvent event) {
+      String bossName = this.plugin.getLocationManager().getCrateAt(event.getBlock().getLocation());
+      TemporaryCrateManager.ActiveCrate temp = this.plugin.getTempCrateManager().getCrateAt(event.getBlock().getLocation());
+      
+      if (bossName != null || temp != null) {
+         if (event.getPlayer().hasPermission("seriacrate.admin") && event.getPlayer().isSneaking()) {
+            if (bossName != null) this.plugin.getLocationManager().removeCrateLocation(event.getBlock().getLocation());
+            if (temp != null) temp.timeLeft = 0;
+            event.getPlayer().sendMessage("§c[SeriaCrate] Crate berhasil dihapus dari dunia!");
+         } else {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage("§cIni adalah Crate! (Admin: Tahan SHIFT + Klik Kiri untuk menghancurkan)");
+         }
+      }
+   }
 }
