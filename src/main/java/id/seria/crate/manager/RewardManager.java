@@ -98,8 +98,9 @@ public class RewardManager {
                     if (itemData.contains("commands")) commands.addAll(itemData.getStringList("commands"));
 
                     List<String> winItemsClean = itemData.getStringList("win_items");
+                    boolean broadcast = itemData.getBoolean("broadcast", false);
 
-                    rewardList.add(new Reward(weight, amount, displayItem, commands, winItemsClean));
+                    rewardList.add(new Reward(weight, amount, displayItem, commands, winItemsClean, broadcast));
                 }
                 tiersMap.put(tierId.toLowerCase(), rewardList);
             }
@@ -243,6 +244,10 @@ public class RewardManager {
     }
 
     public Reward getRewardExact(String crateId, String tierId, int rewardIndex) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        List<Reward> rewards = getRewardsFor(crateId, tierId);
+        if (rewardIndex >= 0 && rewardIndex < rewards.size()) {
+            return rewards.get(rewardIndex);
+        }
+        return null;
     }
 }

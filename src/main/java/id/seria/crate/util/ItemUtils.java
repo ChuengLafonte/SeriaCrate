@@ -35,7 +35,7 @@ public class ItemUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             // Gunakan TextUtils untuk nama & lore
-            meta.displayName(TextUtils.format("&#FFD700<bold>" + bossName.toUpperCase() + " CRATE"));
+            meta.displayName(TextUtils.format("<bold><#FFD700>" + bossName.toUpperCase() + " CRATE</bold>"));
             meta.lore(TextUtils.formatList(Arrays.asList(
                 "&7Letakkan blok ini di lantai", 
                 "&7untuk membuat Crate permanen."

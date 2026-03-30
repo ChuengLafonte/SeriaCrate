@@ -27,7 +27,7 @@ rolling-gui:
   pointer:
     slots: [4, 22] # Posisi index slot Hopper
     material: HOPPER
-    name: "&e▼ &6ROLLING &e▼"
+    name: "<yellow>▼ <gold>ROLLING <yellow>▼"
     lore: 
       - "&7Sedang mengundi nasibmu..."
       - "&7Semoga beruntung!"
