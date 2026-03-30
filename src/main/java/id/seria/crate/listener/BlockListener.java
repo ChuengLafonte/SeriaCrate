@@ -83,19 +83,31 @@ public class BlockListener implements Listener {
                         player.sendMessage(ChatColor.translateAlternateColorCodes('&', prefix + "&cKamu sudah mengambil hadiah di crate ini!"));
                         return;
                      }
-                     tempCrate.claimedPlayers.add(player.getUniqueId());
+                     // PENAMBAHAN CLAIMED PLAYERS DIHAPUS DARI SINI
                   }
 
-                  String tierToRoll = "s"; // Bisa disesuaikan nanti dengan Key Player
+                  // PERHATIAN: Saat ini tier di-hardcode ke "s". Pastikan di config rewards milikmu ada tier "s"
+                  String tierToRoll = "s"; 
                   List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
+                  
                   if (pool == null || pool.isEmpty()) {
                      player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll.toUpperCase());
-                     return;
+                     return; // Berhenti tanpa mencatat pemain ke daftar klaim
                   }
 
-                  Inventory inv = CrateGUI.createOpeningGUI(bossName, tierToRoll);
-                  player.openInventory(inv);
-                  new RollingEngine(this.plugin).startRolling(player, inv, pool);
+                  try {
+                      Inventory inv = CrateGUI.createOpeningGUI(bossName, tierToRoll);
+                      player.openInventory(inv);
+                      new RollingEngine(this.plugin).startRolling(player, inv, pool);
+                      
+                      // BARU DICATAT SETELAH GUI BERHASIL TERBUKA DAN ROLLING DIMULAI
+                      if (isTemporary) {
+                         tempCrate.claimedPlayers.add(player.getUniqueId());
+                      }
+                  } catch (Exception e) {
+                      player.sendMessage("§cTerjadi kesalahan saat membuka Crate! Silakan lapor ke Admin.");
+                      e.printStackTrace();
+                  }
                }
             }
          }

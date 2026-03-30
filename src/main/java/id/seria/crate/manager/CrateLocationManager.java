@@ -26,10 +26,13 @@ public class CrateLocationManager {
    private final Map<Location, TextDisplay> activeHolograms = new HashMap();
 
    public CrateLocationManager(SeriaCrate plugin) {
-      this.plugin = plugin;
-      this.file = new File(plugin.getDataFolder(), "locations.yml");
-      this.loadLocations();
-   }
+    this.plugin = plugin;
+    this.file = new File(plugin.getDataFolder(), "locations.yml");
+   
+    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        this.loadLocations();
+    }, 20L); // Delay 20 tick (1 detik) setelah server menyala
+}
 
    public void loadLocations() {
       this.crateLocations.clear();

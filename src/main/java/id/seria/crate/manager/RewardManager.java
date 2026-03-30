@@ -66,11 +66,17 @@ public class RewardManager {
                         displayItem.setItemMeta(sm);
                     } else if (materialStr.startsWith("mmoitems-")) {
                         displayItem = new ItemStack(Material.STONE);
-                        try {
-                            String[] parts = materialStr.substring(9).split(":");
-                            ItemStack mi = net.Indyuce.mmoitems.MMOItems.plugin.getItem(net.Indyuce.mmoitems.api.Type.get(parts[0]), parts[1]);
-                            if (mi != null) displayItem = mi;
-                        } catch (Exception ignored) {}
+                        
+                        // 1. Cek apakah plugin MMOItems aktif di server
+                        if (plugin.getServer().getPluginManager().isPluginEnabled("MMOItems")) {
+                            try {
+                                String[] parts = materialStr.substring(9).split(":");
+                                ItemStack mi = net.Indyuce.mmoitems.MMOItems.plugin.getItem(net.Indyuce.mmoitems.api.Type.get(parts[0]), parts[1]);
+                                if (mi != null) displayItem = mi;
+                            } catch (Throwable ignored) { 
+                                // 2. Gunakan Throwable, bukan Exception, agar terhindar dari Error class loading
+                            }
+                        }
                     } else {
                         Material mat = Material.matchMaterial(materialStr);
                         displayItem = new ItemStack(mat != null ? mat : Material.STONE);
