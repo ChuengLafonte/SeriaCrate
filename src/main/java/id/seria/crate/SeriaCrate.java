@@ -27,6 +27,7 @@ import id.seria.crate.manager.ResinManager;
 import id.seria.crate.manager.RewardManager;
 import id.seria.crate.manager.TemporaryCrateManager;
 import id.seria.crate.model.Reward;
+import id.seria.crate.util.TextUtils;
 import net.milkbowl.vault.economy.Economy;
 
 public class SeriaCrate extends JavaPlugin {
@@ -103,8 +104,9 @@ public class SeriaCrate extends JavaPlugin {
         return econ != null;
     }
 
-    // Getters
+    // Perbaikan Singleton: Gunakan nama yang benar agar dipahami class lain
     public static SeriaCrate getInstance() { return instance; }
+    
     public Economy getEconomy() { return econ; }
     public ConfigManager getConfigManager() { return configManager; }
     public RewardManager getRewardManager() { return rewardManager; }
@@ -120,11 +122,11 @@ public class SeriaCrate extends JavaPlugin {
         if (!sender.hasPermission("seriacrate.admin")) return true;
 
         if (args.length == 0) {
-            sender.sendMessage("§e/scrate spawn <boss> <x> <y> <z>");
-            sender.sendMessage("§e/scrate editor");
-            sender.sendMessage("§e/scrate givecrate <boss> [player]");
-            sender.sendMessage("§e/scrate open <player> <boss> <tier>");
-            sender.sendMessage("§e/scrate reload");
+            sender.sendMessage(TextUtils.format("<yellow>/scrate spawn <boss> <x> <y> <z>"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate editor"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate givecrate <boss> [player]"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate open <player> <boss> <tier>"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate reload"));
             return true;
         }
 
@@ -142,7 +144,7 @@ public class SeriaCrate extends JavaPlugin {
             Player target = (args.length >= 3) ? Bukkit.getPlayer(args[2]) : (Player) sender;
             if (target != null) {
                 target.getInventory().addItem(id.seria.crate.util.ItemUtils.getCrateItem(boss));
-                sender.sendMessage("§aBerhasil memberikan Crate Item " + boss.toUpperCase() + " ke " + target.getName());
+                sender.sendMessage(TextUtils.format("<green>Berhasil memberikan Crate Item <bold>" + boss.toUpperCase() + "</bold> ke " + target.getName()));
             }
             return true;
         }
@@ -157,14 +159,14 @@ public class SeriaCrate extends JavaPlugin {
 
                 Location loc = new Location(((Player) sender).getWorld(), x, y, z);
                 tempCrateManager.spawnTemporaryCrate(loc, boss);
-                sender.sendMessage("§aBerhasil spawn Crate " + boss.toUpperCase() + " sementara!");
+                sender.sendMessage(TextUtils.format("&#00FF00Berhasil spawn Crate <bold>" + boss.toUpperCase() + "</bold> sementara!"));
             } catch (Exception e) {
-                sender.sendMessage("§cKoordinat harus berupa angka!");
+                sender.sendMessage(TextUtils.format("<red>Koordinat harus berupa angka!"));
             }
             return true;
         }
 
-        // COMMAND: /scrate open (DIPERBAIKI PARAMETER ROLLINGNYA)
+        // COMMAND: /scrate open
         if (args[0].equalsIgnoreCase("open") && args.length >= 4) {
             Player target = Bukkit.getPlayer(args[1]);
             String boss = args[2].toLowerCase();
@@ -174,14 +176,13 @@ public class SeriaCrate extends JavaPlugin {
 
             List<Reward> pool = rewardManager.getRewardsFor(boss, tier);
             if (pool.isEmpty()) {
-                sender.sendMessage("§cHadiah kosong di tier ini!");
+                sender.sendMessage(TextUtils.format("<red>Hadiah kosong di tier ini!"));
                 return true;
             }
 
             Inventory inv = CrateGUI.createOpeningGUI(boss, tier);
             target.openInventory(inv);
             
-            // Perbaikan: Tambahkan boss dan tier sebagai parameter untuk broadcast
             new RollingEngine(this).startRolling(target, inv, pool, boss, tier);
             return true;
         }
@@ -190,7 +191,7 @@ public class SeriaCrate extends JavaPlugin {
         if (args[0].equalsIgnoreCase("reload")) {
             configManager.loadAllConfigs();
             rewardManager.loadRewards();
-            sender.sendMessage("§a[SeriaCrate] Config, Messages, GUI, & Rewards Reloaded!");
+            sender.sendMessage(TextUtils.format("<green>[SeriaCrate] Config, Messages, GUI, & Rewards Reloaded!"));
             return true;
         }
 
@@ -204,7 +205,7 @@ public class SeriaCrate extends JavaPlugin {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         List<String> commands = Arrays.asList("spawn", "open", "reload", "editor", "givecrate");
-        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow"); // Saran: Bisa diambil dinamis dari file config kedepannya
+        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow"); 
         List<String> tiers = Arrays.asList("s", "a", "b", "c", "d");
 
         if (!sender.hasPermission("seriacrate.admin")) return completions;

@@ -3,23 +3,21 @@ package id.seria.crate.engine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
 import id.seria.crate.util.ItemUtils;
+import id.seria.crate.util.TextUtils;
+import net.kyori.adventure.text.Component;
 
 public class RollingEngine {
 
@@ -28,17 +26,6 @@ public class RollingEngine {
 
     public RollingEngine(SeriaCrate plugin) { 
         this.plugin = plugin; 
-    }
-
-    // Fungsi untuk mengubah <#HEX> menjadi warna (Support versi 1.16+)
-    public String translateHex(String message) {
-        Pattern pattern = Pattern.compile("<#([A-Fa-f0-9]{6})>");
-        Matcher matcher = pattern.matcher(message);
-        StringBuffer buffer = new StringBuffer();
-        while (matcher.find()) {
-            matcher.appendReplacement(buffer, net.md_5.bungee.api.ChatColor.of("#" + matcher.group(1)).toString());
-        }
-        return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(buffer).toString());
     }
 
     public Reward getRandomWeighted(List<Reward> rewards) {
@@ -55,10 +42,8 @@ public class RollingEngine {
         return rewards.get(0);
     }
 
-    // Parameter crateId dan tierId ditambahkan
     public void startRolling(final Player player, final Inventory inv, List<Reward> availableRewards, final String crateId, final String tierId) {
         FileConfiguration guiConfig = plugin.getConfigManager().getGui();
-        
         final List<Integer> rollingSlots = guiConfig.getIntegerList("rolling-gui.rolling-slots");
         if (rollingSlots.isEmpty()) {
             for (int i = 9; i <= 17; i++) rollingSlots.add(i);
@@ -67,7 +52,6 @@ public class RollingEngine {
         final int windowSize = rollingSlots.size();
         final int maxSteps = 45; 
         final List<Reward> sequence = new ArrayList<>();
-        
         for (int i = 0; i < maxSteps + windowSize; i++) {
             sequence.add(this.getRandomWeighted(availableRewards));
         }
@@ -89,26 +73,21 @@ public class RollingEngine {
                 }
 
                 ticks++;
-                
                 if (ticks >= delay) {
                     ticks = 0; 
-                    
                     for (int i = 0; i < windowSize; i++) {
                         int invSlot = rollingSlots.get(i);
                         if (invSlot < inv.getSize()) {
                             inv.setItem(invSlot, ItemUtils.buildRewardItem(sequence.get(step + i)));
                         }
                     }
-                    
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.8F, 1.5F);
                     step++;
 
                     if (step >= maxSteps) {
                         this.cancel(); 
-                        
                         giveReward(player, winningReward, crateId, tierId); 
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-                        
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -117,7 +96,6 @@ public class RollingEngine {
                                 }
                             }
                         }.runTaskLater(plugin, 30L);
-                        
                     } else if (step >= maxSteps * 0.85) { delay = 8; 
                     } else if (step >= maxSteps * 0.70) { delay = 5; 
                     } else if (step >= maxSteps * 0.50) { delay = 3;
@@ -127,11 +105,8 @@ public class RollingEngine {
         }.runTaskTimer(plugin, 0L, 1L); 
     }
 
-    // Parameter crateId dan tierId ditambahkan
     public void giveReward(Player player, Reward win, String crateId, String tierId) {
         boolean hasGivenAnything = false;
-
-        // Berikan Item
         if (win.getWinItemsClean() != null) {
             for (String cleanStr : win.getWinItemsClean()) {
                 ItemStack item = ItemUtils.deserializeItemClean(cleanStr);
@@ -141,55 +116,49 @@ public class RollingEngine {
                 }
             }
         }
-
-        // Eksekusi Command
         if (win.getCommands() != null) {
             for (String cmd : win.getCommands()) {
-                String finalCmd = cmd.replace("%player%", player.getName()).replace("%player_name%", player.getName());
+                String finalCmd = cmd.replace("%player%", player.getName());
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
                 hasGivenAnything = true;
             }
         }
-
-        // Fallback Item
         if (!hasGivenAnything && win.getDisplayItem() != null) {
             ItemStack fallback = win.getDisplayItem().clone();
             fallback.setAmount(win.getAmount());
             player.getInventory().addItem(fallback);
         }
 
-        FileConfiguration msgConfig = plugin.getConfigManager().getMessages();
-        String prefix = msgConfig.getString("prefix", "&7&9&1&E&F&Fᴘʀᴏᴊᴇᴄᴛ ꜱᴇʀɪᴀ &7» ");
-        String winMsg = msgConfig.getString("success.receive-reward", "&fSelamat! Kamu memenangkan hadiah dari crate!");
-        player.sendMessage(translateHex(prefix + winMsg));
+        // Ambil prefix & pesan dari ConfigManager (Component)
+        Component prefix = plugin.getConfigManager().getMessage("prefix");
+        Component winMsg = plugin.getConfigManager().getMessage("success.receive-reward");
+        player.sendMessage(prefix.append(winMsg));
 
-        // ==========================================
-        // SISTEM BROADCAST MULTI-LINE HEX COLOR
-        // ==========================================
         if (win.isBroadcast()) {
-            List<String> broadcastLines = msgConfig.getStringList("broadcast." + tierId.toLowerCase());
-            
-            // Jika format untuk tier tersebut tidak ada, gunakan format default
-            if (broadcastLines.isEmpty()) {
-                broadcastLines = msgConfig.getStringList("broadcast.default");
-            }
+            List<String> broadcastLines = plugin.getConfigManager().getMessages().getStringList("broadcast." + tierId.toLowerCase());
+            if (broadcastLines.isEmpty()) broadcastLines = plugin.getConfigManager().getMessages().getStringList("broadcast.default");
 
-            // Dapatkan nama item untuk display
-            String rewardName = "Item Misterius";
+            Component rewardName = Component.text("Item Misterius");
             if (win.getDisplayItem() != null && win.getDisplayItem().hasItemMeta()) {
-                ItemMeta meta = win.getDisplayItem().getItemMeta();
-                if (meta.hasDisplayName()) rewardName = meta.getDisplayName();
+                if (win.getDisplayItem().getItemMeta().hasDisplayName()) {
+                    rewardName = win.getDisplayItem().getItemMeta().displayName();
+                }
             }
 
             for (String line : broadcastLines) {
-                String formatted = line
-                        .replace("%prefix%", prefix)
+                Component formatted = TextUtils.format(line
                         .replace("%player%", player.getName())
-                        .replace("%reward%", rewardName)
                         .replace("%crate%", crateId.toUpperCase())
-                        .replace("%tier%", tierId.toUpperCase());
+                        .replace("%tier%", tierId.toUpperCase())
+                        .replace("%prefix%", ""));
                 
-                Bukkit.broadcastMessage(translateHex(formatted));
+                Component finalLine = line.contains("%prefix%") ? prefix.append(formatted) : formatted;
+                
+                // Replace %reward% dengan Component Nama Item
+                final Component rName = rewardName;
+                finalLine = finalLine.replaceText(b -> b.match("%reward%").replacement(rName));
+                
+                Bukkit.broadcast(finalLine);
             }
         }
     }

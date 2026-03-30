@@ -34,17 +34,18 @@ public class ItemUtils {
         ItemStack item = new ItemStack(mat != null ? mat : Material.ENDER_CHEST);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("§e§l" + bossName.toUpperCase() + " CRATE");
-            meta.setLore(Arrays.asList("§7Letakkan blok ini di lantai", "§7untuk membuat Crate permanen."));
+            // Gunakan TextUtils untuk nama & lore
+            meta.displayName(TextUtils.format("&#FFD700<bold>" + bossName.toUpperCase() + " CRATE"));
+            meta.lore(TextUtils.formatList(Arrays.asList(
+                "&7Letakkan blok ini di lantai", 
+                "&7untuk membuat Crate permanen."
+            )));
             meta.getPersistentDataContainer().set(new NamespacedKey(SeriaCrate.getInstance(), "crate_id"), PersistentDataType.STRING, bossName.toLowerCase());
             item.setItemMeta(meta);
         }
         return item;
     }
 
-    // ========================================================
-    // TEKNOLOGI ANTI-STEVE HEAD (EKSTRAK & APPLY TEXTURE B64)
-    // ========================================================
     public static String getTexture(SkullMeta meta) {
         try {
             PlayerProfile profile = meta.getOwnerProfile();
@@ -70,13 +71,9 @@ public class ItemUtils {
         } catch (Exception ignored) {}
     }
 
-    // ========================================================
-    // MESIN PENYIMPANAN ITEM FISIK MULTI-REWARD
-    // ========================================================
     public static String serializeItemClean(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return null;
         ItemMeta meta = item.getItemMeta();
-        
         if (meta != null && meta.getPersistentDataContainer().has(new NamespacedKey("ecopets", "pet_egg"), PersistentDataType.STRING)) {
             return "ecopets:" + meta.getPersistentDataContainer().get(new NamespacedKey("ecopets", "pet_egg"), PersistentDataType.STRING) + ":" + item.getAmount();
         }
@@ -86,7 +83,6 @@ public class ItemUtils {
                 return "mmoitems:" + nbt.getType() + ":" + nbt.getString("MMOITEMS_ITEM_ID") + ":" + item.getAmount();
             }
         } catch(Exception ignored) {}
-        
         return "vanilla:" + item.getType().name() + ":" + item.getAmount();
     }
 
@@ -95,7 +91,6 @@ public class ItemUtils {
         String[] parts = str.split(":");
         int amount = 1;
         try { amount = Integer.parseInt(parts[parts.length - 1]); } catch(Exception ignored) {}
-        
         if (str.startsWith("ecopets:")) {
             try {
                 Object testableItem = Class.forName("com.willfp.eco.core.items.Items").getMethod("lookup", String.class).invoke(null, "ecopets:" + parts[1]);
@@ -105,16 +100,16 @@ public class ItemUtils {
                 }
             } catch(Exception ignored) {}
             ItemStack fb = new ItemStack(Material.PLAYER_HEAD);
-            ItemMeta m = fb.getItemMeta(); m.setDisplayName("§aEcoPets: " + parts[1]); fb.setItemMeta(m);
+            ItemMeta m = fb.getItemMeta(); 
+            m.displayName(TextUtils.format("&aEcoPets: " + parts[1])); 
+            fb.setItemMeta(m);
             return fb;
-        } 
-        else if (str.startsWith("mmoitems:")) {
+        } else if (str.startsWith("mmoitems:")) {
             try {
                 ItemStack mi = net.Indyuce.mmoitems.MMOItems.plugin.getItem(net.Indyuce.mmoitems.api.Type.get(parts[1]), parts[2]);
                 if (mi != null) { mi.setAmount(amount); return mi; }
             } catch(Exception ignored) {}
-        } 
-        else if (str.startsWith("vanilla:")) {
+        } else if (str.startsWith("vanilla:")) {
             Material mat = Material.matchMaterial(parts[1]);
             if (mat != null) return new ItemStack(mat, amount);
         }

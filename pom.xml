@@ -16,10 +16,9 @@
 
     <repositories>
         <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-
         <repository>
             <id>auxilor-repo</id>
             <url>https://repo.auxilor.io/repository/maven-public/</url>
@@ -28,8 +27,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
             <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -41,7 +40,6 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/EcoPets v2.78.0.jar</systemPath>
         </dependency>
-
         <dependency>
             <groupId>net.Indyuce</groupId>
             <artifactId>mmoitems</artifactId>
@@ -49,14 +47,13 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/MMOItems-6.10.1-45.jar</systemPath>
         </dependency>
-
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>MythicLib</artifactId>
-            <version>1.6.1</version> <scope>system</scope>
+            <version>1.6.1</version> 
+            <scope>system</scope>
             <systemPath>${project.basedir}/lib/MythicLib-dist-1.7.1-71.jar</systemPath>
         </dependency>
-
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -64,7 +61,6 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/Vault (1).jar</systemPath>
         </dependency>
-
         <dependency>
             <groupId>de.oliver</groupId>
             <artifactId>FancyHolograms</artifactId>
