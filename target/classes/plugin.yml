@@ -13,3 +13,12 @@ commands:
     aliases: [scrate]
   opencrate:
     description: Open the crate UI
+  scrate:
+    description: Main command for SeriaCrate
+    permission: seriacrate.admin
+  resin:
+    description: Mengecek jumlah dan waktu regen resin
+    aliases: [stamina]
+  resinadmin:
+    description: Manajemen resin player
+    permission: seriacrate.admin

@@ -1,5 +1,4 @@
 crate-settings:
-  crate-settings:
   block: ENDER_CHEST
   hologram: true
   duration: 180

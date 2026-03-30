@@ -1,12 +1,60 @@
-gui:
-  opening:
-    title: "&8Rolling: %boss% [%tier%]"
-    size: 27
-  preview:
-    title: "&8Preview Hadiah: %boss%"
-    size: 54
-  editor:
-    main-menu: "&8Crate Editor: Main Menu"
-    settings: "&8Settings: %boss%"
-    tiers: "&8Tiers: %boss%"
-    item-editor: "&8Editor: %boss% | %tier%"
+# ==========================================
+# PROJECT SERIA - GUI CONFIGURATION
+# ==========================================
+
+# ==========================================
+# 1. ROULETTE / ROLLING GUI (Animasi CS:GO)
+# ==========================================
+rolling-gui:
+  # Variabel yang didukung: %boss%, %tier%
+  # PENTING: Sistem menggunakan nama ini untuk mendeteksi GUI Crate agar player tidak bisa mengambil item kaca/hopper-nya.
+  title: "&8Reward Crate %boss% - Tier %tier%"
+  
+  # Ukuran inventory (Harus kelipatan 9: 27, 36, 45, 54)
+  size: 27 
+  
+  # Slot tempat item bergulir dari kiri ke kanan.
+  # Pastikan letaknya berada di baris tengah agar terlihat rapi.
+  rolling-slots: [9, 10, 11, 12, 13, 14, 15, 16, 17]
+  
+  # Item pengisi celah kosong di dalam GUI (Background)
+  filler:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+    lore: []
+    
+  # Pointer penunjuk kemenangan (berada tepat di atas dan di bawah slot tengah)
+  pointer:
+    slots: [4, 22] # Posisi index slot Hopper
+    material: HOPPER
+    name: "&e▼ &6ROLLING &e▼"
+    lore: 
+      - "&7Sedang mengundi nasibmu..."
+      - "&7Semoga beruntung!"
+
+# ==========================================
+# 2. PREVIEW GUI (Melihat Daftar Hadiah)
+# ==========================================
+preview-gui:
+  # Variabel yang didukung: %boss%
+  title: "&8Preview Hadiah: %boss%"
+  size: 54
+  filler-material: GRAY_STAINED_GLASS_PANE
+
+# ==========================================
+# 3. EDITOR GUI (Khusus Admin /scrate)
+# ==========================================
+editor-gui:
+  # Pengaturan Judul (Title) untuk masing-masing menu Editor
+  titles:
+    main-menu: "Editor > Crates"
+    settings: "Editor > ... > Crate"
+    tiers: "Editor > ... > Tiers"
+    reward-list: "Editor > ... > Rewards"
+    reward-edit: "Editor > ... > Reward"
+    win-items: "Edit > Fisik Reward"
+    commands: "Edit > Commands"
+    block-editor: "Pilih Blok (Hal %page%)"
+    
+  # Material kaca yang digunakan sebagai background menu editor
+  filler-material: GRAY_STAINED_GLASS_PANE

@@ -103,25 +103,26 @@ public class EditorListener implements Listener {
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_DURATION", holder.getCrateId(), null, -1));
                 } else if (itemName.contains("Rewards")) {
                     EditorMenuManager.openTierSelection(player, holder.getCrateId());
-                } 
-                // ==========================================
-                // [TAMBAHAN BARU] Logika Toggle Hologram
-                // ==========================================
-                else if (itemName.contains("Hologram")) {
+                } else if (itemName.contains("Hologram")) {
                     boolean currentHolo = config.getBoolean("crate-settings.hologram", true);
                     config.set("crate-settings.hologram", !currentHolo); 
                     save(config, file);
                     player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
-                    
-                    // [TAMBAHAN] Auto Reload Hologram di World saat diedit
                     SeriaCrate.getInstance().getLocationManager().loadLocations(); 
-                    
                     EditorMenuManager.openCrateSettings(player, holder.getCrateId());
+                } else if (itemName.contains("Blok Fisik")) {
+                    EditorMenuManager.openBlockEditor(player, holder.getCrateId(), 0); 
                 } 
                 // ==========================================
-                else if (itemName.contains("Blok Fisik")) {
-                    EditorMenuManager.openBlockEditor(player, holder.getCrateId(), 0); 
-                } else if (itemName.contains("Ambil Crate")) {
+                // [TAMBAHAN BARU] Tombol Biaya Resin
+                // ==========================================
+                else if (itemName.contains("Biaya Resin")) {
+                    player.closeInventory();
+                    player.sendMessage("§eKetik jumlah Biaya Resin untuk crate ini di chat (ketik 0 untuk gratis):");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_RESIN_COST", holder.getCrateId(), null, -1));
+                }
+                // ==========================================
+                else if (itemName.contains("Ambil Crate")) {
                     player.getInventory().addItem(id.seria.crate.util.ItemUtils.getCrateItem(holder.getCrateId()));
                 } else if (itemName.contains("Kembali")) {
                     EditorMenuManager.openMainMenu(player);
@@ -152,17 +153,13 @@ public class EditorListener implements Listener {
                 break;
 
             case REWARD_EDIT:
-                // KITA GUNAKAN PENGECEKAN SLOT AGAR 100% ANTI-GAGAL!
                 if (event.getRawSlot() == 20) { 
-                    // Slot 20 = Shulker Box (Menu Multi Item)
                     EditorMenuManager.openRewardWinItemsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
                 } 
                 else if (event.getRawSlot() == 21) { 
-                    // Slot 21 = Command Block (Menu Multi Command)
                     EditorMenuManager.openRewardCommandsMenu(player, holder.getCrateId(), holder.getTierId(), holder.getRewardIndex());
                 } 
                 else if (event.getRawSlot() == 22) { 
-                    // Slot 22 = Goat Horn (Toggle Broadcast)
                     File f = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
                     FileConfiguration c = YamlConfiguration.loadConfiguration(f);
                     String path = "tiers." + holder.getTierId() + "." + holder.getRewardIndex() + ".broadcast";
@@ -172,17 +169,14 @@ public class EditorListener implements Listener {
                     player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
                 }
                 else if (event.getRawSlot() == 23) { 
-                    // Slot 23 = Gold Ingot (Ubah Weight)
                     player.closeInventory(); player.sendMessage("§e[SeriaCrate] Ketik Peluang (Weight) baru:");
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_WEIGHT", holder.getCrateId(), holder.getTierId(), holder.getRewardIndex()));
                 } 
                 else if (event.getRawSlot() == 24) { 
-                    // Slot 24 = Emerald (Ubah Amount)
                     player.closeInventory(); player.sendMessage("§e[SeriaCrate] Ketik Jumlah (Amount) UI baru:");
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_AMOUNT", holder.getCrateId(), holder.getTierId(), holder.getRewardIndex()));
                 } 
                 else if (event.getRawSlot() == 51 || itemName.contains("Kembali")) { 
-                    // Tombol Barrier (Kembali)
                     EditorMenuManager.openRewardList(player, holder.getCrateId(), holder.getTierId());
                 }
                 break;
@@ -228,21 +222,16 @@ public class EditorListener implements Listener {
                 else if (itemName.contains("Halaman Berikutnya")) {
                     EditorMenuManager.openBlockEditor(player, holder.getCrateId(), holder.getRewardIndex() + 1);
                 } 
-                // Jika player mengklik salah satu Blok (Slot 0 - 44)
                 else if (event.getRawSlot() < 45 && event.getCurrentItem() != null && event.getCurrentItem().getType() != Material.AIR) {
                     Material selectedBlock = event.getCurrentItem().getType();
-                    
                     File f = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), holder.getCrateId() + ".yml");
                     FileConfiguration c = YamlConfiguration.loadConfiguration(f);
                     
-                    // Simpan tipe blok ke config
                     c.set("crate-settings.block", selectedBlock.name());
                     save(c, f);
                     
                     player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                     player.sendMessage("§aWujud crate berhasil diubah menjadi " + selectedBlock.name());
-                    
-                    // Kembalikan ke menu Settings
                     EditorMenuManager.openCrateSettings(player, holder.getCrateId());
                 }
                 break;
@@ -257,12 +246,15 @@ public class EditorListener implements Listener {
         if (!activePrompts.containsKey(player.getUniqueId())) return;
         event.setCancelled(true);
         ChatPrompt prompt = activePrompts.remove(player.getUniqueId());
+        
         Bukkit.getScheduler().runTask(SeriaCrate.getInstance(), () -> {
             String msg = event.getMessage();
             if (msg.equalsIgnoreCase("batal")) {
                 player.sendMessage("§cDibatalkan.");
                 if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT") || prompt.type.contains("COMMAND")) {
                     EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                } else if (prompt.type.equals("EDIT_RESIN_COST") || prompt.type.equals("EDIT_DURATION")) {
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
                 }
                 return;
             }
@@ -279,10 +271,25 @@ public class EditorListener implements Listener {
 
             try {
                 int number = Integer.parseInt(msg);
+                
                 if (prompt.type.equals("EDIT_DURATION")) {
-                    c.set("crate-settings.duration", number); save(c, f);
+                    c.set("crate-settings.duration", number); 
+                    save(c, f);
+                    player.sendMessage("§aDurasi berhasil diubah menjadi " + number + " detik.");
                     EditorMenuManager.openCrateSettings(player, prompt.crateId);
-                } else if (prompt.type.equals("EDIT_WEIGHT")) {
+                } 
+                // ==========================================
+                // [TAMBAHAN BARU] Simpan Biaya Resin
+                // ==========================================
+                else if (prompt.type.equals("EDIT_RESIN_COST")) {
+                    c.set("crate-settings.resin-cost", number); 
+                    save(c, f);
+                    player.sendMessage("§aBiaya Resin berhasil diatur menjadi " + number + ".");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
+                }
+                // ==========================================
+                else if (prompt.type.equals("EDIT_WEIGHT")) {
                     c.set("tiers." + prompt.tierId + "." + prompt.dataIndex + ".weight", number); save(c, f);
                     SeriaCrate.getInstance().getRewardManager().loadRewards();
                     EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
@@ -292,8 +299,15 @@ public class EditorListener implements Listener {
                     EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
                 }
             } catch (NumberFormatException e) {
-                player.sendMessage("§cHarus angka bulat!");
-                if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT")) EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                player.sendMessage("§cInput tidak valid! Harus berupa angka bulat.");
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                
+                // Kembalikan ke menu yang sesuai jika input gagal
+                if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT")) {
+                    EditorMenuManager.openRewardEdit(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
+                } else if (prompt.type.equals("EDIT_RESIN_COST") || prompt.type.equals("EDIT_DURATION")) {
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
+                }
             }
         });
     }

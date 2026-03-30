@@ -11,6 +11,10 @@ settings:
   # Durasi maksimal animasi putaran (ticks)
   max-rolling-duration-ticks: 60
 
+resin:
+  enabled: true
+  max: 160
+  regen-minutes: 3
 
 temporary-crate:
   enabled: true
@@ -28,3 +32,5 @@ GUI:
   # Variabel yang tersedia: %boss% (Nama Boss), %tier% (Tier)
   # JANGAN hapus kata "Reward Crate", karena digunakan sistem untuk memblokir klik pemain.
   TitleFormat: "&8Reward Crate %boss% - Tier %tier%"
+
+  

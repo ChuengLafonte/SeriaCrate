@@ -14,6 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import id.seria.crate.command.ResinCommand;
 import id.seria.crate.engine.RollingEngine;
 import id.seria.crate.gui.CrateGUI;
 import id.seria.crate.gui.editor.EditorListener;
@@ -22,6 +23,7 @@ import id.seria.crate.listener.BlockListener;
 import id.seria.crate.listener.GUIListener;
 import id.seria.crate.manager.ConfigManager;
 import id.seria.crate.manager.CrateLocationManager;
+import id.seria.crate.manager.ResinManager;
 import id.seria.crate.manager.RewardManager;
 import id.seria.crate.manager.TemporaryCrateManager;
 import id.seria.crate.model.Reward;
@@ -37,14 +39,18 @@ public class SeriaCrate extends JavaPlugin {
     private RewardManager rewardManager;
     private TemporaryCrateManager tempCrateManager;
     private CrateLocationManager locationManager;
+    private ResinManager resinManager;
 
     @Override
     public void onEnable() {
         instance = this;
 
-        // 1. INIT CONFIG PERTAMA KALI (Sangat Penting urutannya!)
+        // 1. INIT CONFIG PERTAMA KALI
         configManager = new ConfigManager(this);
-        configManager.setupDefaultRewards(); // <--- Tambahkan ini
+        configManager.setupDefaultRewards();
+        
+        // Init Resin Manager
+        this.resinManager = new ResinManager(this);
 
         // 2. Setup Vault
         if (!setupEconomy()) {
@@ -59,14 +65,23 @@ public class SeriaCrate extends JavaPlugin {
         tempCrateManager = new TemporaryCrateManager(this);
         locationManager = new CrateLocationManager(this);
 
-
         // 5. Register Listeners
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
         getServer().getPluginManager().registerEvents(new EditorListener(), this);
 
-        // 6. Register Tab Completer
+        // 6. Register Command & Tab Completer
         getCommand("seriacrate").setTabCompleter(this);
+        
+        // Daftarkan Command Resin
+        ResinCommand resinCmd = new ResinCommand(this);
+        if (getCommand("resin") != null) {
+            getCommand("resin").setExecutor(resinCmd);
+        }
+        if (getCommand("resinadmin") != null) {
+            getCommand("resinadmin").setExecutor(resinCmd);
+            getCommand("resinadmin").setTabCompleter(resinCmd);
+        }
 
         getLogger().info("SeriaCrate (Modular Version) Aktif!");
     }
@@ -75,6 +90,9 @@ public class SeriaCrate extends JavaPlugin {
     public void onDisable() {
         if (tempCrateManager != null) tempCrateManager.forceClearAllCrates();
         if (locationManager != null) locationManager.clearHolograms();
+        if (this.resinManager != null) {
+            this.resinManager.saveData(); // Simpan sisa resin & waktu player ke data
+        }
     }
 
     private boolean setupEconomy() {
@@ -92,6 +110,7 @@ public class SeriaCrate extends JavaPlugin {
     public RewardManager getRewardManager() { return rewardManager; }
     public TemporaryCrateManager getTempCrateManager() { return tempCrateManager; }
     public CrateLocationManager getLocationManager() { return locationManager; }
+    public ResinManager getResinManager() { return this.resinManager; }
 
     // ==========================================
     // BAGIAN COMMAND EXECUTOR
@@ -145,7 +164,7 @@ public class SeriaCrate extends JavaPlugin {
             return true;
         }
 
-        // COMMAND: /scrate open
+        // COMMAND: /scrate open (DIPERBAIKI PARAMETER ROLLINGNYA)
         if (args[0].equalsIgnoreCase("open") && args.length >= 4) {
             Player target = Bukkit.getPlayer(args[1]);
             String boss = args[2].toLowerCase();
@@ -161,7 +180,9 @@ public class SeriaCrate extends JavaPlugin {
 
             Inventory inv = CrateGUI.createOpeningGUI(boss, tier);
             target.openInventory(inv);
-            new RollingEngine(this).startRolling(target, inv, pool);
+            
+            // Perbaikan: Tambahkan boss dan tier sebagai parameter untuk broadcast
+            new RollingEngine(this).startRolling(target, inv, pool, boss, tier);
             return true;
         }
 
@@ -169,7 +190,7 @@ public class SeriaCrate extends JavaPlugin {
         if (args[0].equalsIgnoreCase("reload")) {
             configManager.loadAllConfigs();
             rewardManager.loadRewards();
-            sender.sendMessage("§a[SeriaCrate] Config & Rewards Reloaded!");
+            sender.sendMessage("§a[SeriaCrate] Config, Messages, GUI, & Rewards Reloaded!");
             return true;
         }
 
@@ -183,7 +204,7 @@ public class SeriaCrate extends JavaPlugin {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         List<String> commands = Arrays.asList("spawn", "open", "reload", "editor", "givecrate");
-        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow");
+        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow"); // Saran: Bisa diambil dinamis dari file config kedepannya
         List<String> tiers = Arrays.asList("s", "a", "b", "c", "d");
 
         if (!sender.hasPermission("seriacrate.admin")) return completions;

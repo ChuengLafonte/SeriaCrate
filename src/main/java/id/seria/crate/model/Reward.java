@@ -25,4 +25,8 @@ public class Reward {
     public ItemStack getDisplayItem() { return displayItem; }
     public List<String> getCommands() { return commands; }
     public List<String> getWinItemsClean() { return winItemsClean; }
+
+    public boolean isBroadcast() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

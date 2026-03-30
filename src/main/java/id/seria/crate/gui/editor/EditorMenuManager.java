@@ -34,13 +34,9 @@ public class EditorMenuManager {
         return item;
     }
 
-    // ==========================================
-    // TAMBAHKAN INI DI BAGIAN ATAS KELAS (Di bawah deklarasi class)
-    // ==========================================
     public static final List<Material> VALID_BLOCKS = new ArrayList<>();
     static {
         for (Material mat : Material.values()) {
-            // Filter: Harus berbentuk block, bisa dijadikan item GUI, dan bukan AIR/Legacy
             if (mat.isBlock() && mat.isItem() && !mat.isAir() && !mat.name().startsWith("LEGACY_")) {
                 VALID_BLOCKS.add(mat);
             }
@@ -82,17 +78,19 @@ public class EditorMenuManager {
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         boolean isTemp = config.getBoolean("crate-settings.is-temporary", false);
         int duration = config.getInt("crate-settings.duration", 180);
-        
-        // [BARU] Baca status Hologram (Default kita anggap True/Aktif)
         boolean isHoloEnabled = config.getBoolean("crate-settings.hologram", true);
+        
+        // [RESIN] Mengambil data resin cost dari file yaml
+        int resinCost = config.getInt("crate-settings.resin-cost", 0);
 
         inv.setItem(10, createIcon(isTemp ? Material.SLIME_BALL : Material.MAGMA_CREAM, "§eTipe Crate", "§7Saat ini: " + (isTemp ? "§cSementara" : "§aPermanen"), "§7Klik untuk mengubah."));
         inv.setItem(11, createIcon(Material.NAME_TAG, "§eDurasi: §f" + duration + "s", "§7Klik untuk mengubah."));
         inv.setItem(13, createIcon(Material.EMERALD, "§aRewards", "§7Atur hadiah crate."));
         
-        // [PERBAIKAN] Nether Star sekarang menampilkan Status ON/OFF
-        inv.setItem(15, createIcon(Material.NETHER_STAR, "§bHologram", "§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI"), " ", "§7Klik untuk Mengaktifkan/Mematikan", "§7hologram di atas crate ini."));
+        // [RESIN] Diinjeksi ke Slot 14 milikmu
+        inv.setItem(14, createIcon(Material.SLIME_BALL, "§9Biaya Resin", "§7Saat ini: §b" + resinCost + " 🔲", " ", "§7Klik untuk mengatur biaya resin", "§7saat membuka crate."));
         
+        inv.setItem(15, createIcon(Material.NETHER_STAR, "§bHologram", "§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI"), " ", "§7Klik untuk Mengaktifkan/Mematikan", "§7hologram di atas crate ini."));
         inv.setItem(16, createIcon(Material.NAUTILUS_SHELL, "§dBlok Fisik", "§7Atur wujud crate."));
 
         ItemStack filler = createIcon(Material.GRAY_STAINED_GLASS_PANE, " ");
@@ -257,30 +255,25 @@ public class EditorMenuManager {
 
         ItemStack filler = createIcon(Material.GRAY_STAINED_GLASS_PANE, " ");
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
-        inv.setItem(49, createIcon(Material.EMERALD_BLOCK, "§a+ Tambah Command", "§7Klik untuk mengetik via chat."));
-        inv.setItem(51, createIcon(Material.BARRIER, "§cKembali"));
+        inv.setItem(48, createIcon(Material.LIME_STAINED_GLASS_PANE, "§aTambah Command"));
+        inv.setItem(50, createIcon(Material.BARRIER, "§cKembali"));
         player.openInventory(inv);
     }
-    // ==========================================
-    // TAMBAHKAN FUNGSI INI DI BAGIAN PALING BAWAH KELAS
-    // ==========================================
+
     public static void openBlockEditor(Player player, String crateId, int page) {
-        // Kita manfaatkan variabel rewardIndex sebagai penyimpan nomor Halaman (Page)
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.BLOCK_EDITOR, crateId, null, page);
         Inventory inv = Bukkit.createInventory(holder, 54, "Pilih Blok (Hal " + (page + 1) + ")");
         holder.setInventory(inv);
 
-        // Rumus Pagination (45 Item per halaman)
         int startIndex = page * 45;
         for (int i = 0; i < 45; i++) {
             int listIndex = startIndex + i;
-            if (listIndex >= VALID_BLOCKS.size()) break; // Stop jika blok sudah habis
+            if (listIndex >= VALID_BLOCKS.size()) break; 
 
             Material mat = VALID_BLOCKS.get(listIndex);
             inv.setItem(i, createIcon(mat, "§e" + mat.name(), " ", "§a[KLIK] §7Jadikan wujud Crate"));
         }
 
-        // Bottom UI (Navigasi)
         ItemStack filler = createIcon(Material.GRAY_STAINED_GLASS_PANE, " ");
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
@@ -292,7 +285,6 @@ public class EditorMenuManager {
         }
 
         inv.setItem(49, createIcon(Material.BARRIER, "§cKembali"));
-
         player.openInventory(inv);
     }
 }

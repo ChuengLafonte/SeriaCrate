@@ -241,4 +241,8 @@ public class RewardManager {
             try { config.save(file); loadRewards(); } catch (IOException ignored) {}
         }
     }
+
+    public Reward getRewardExact(String crateId, String tierId, int rewardIndex) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
