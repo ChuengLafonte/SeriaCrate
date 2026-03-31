@@ -31,6 +31,11 @@ GUI:
   # Format judul saat pemain membuka crate. Sangat penting untuk mencegah bug klik!
   # Variabel yang tersedia: %boss% (Nama Boss), %tier% (Tier)
   # JANGAN hapus kata "Reward Crate", karena digunakan sistem untuk memblokir klik pemain.
-  TitleFormat: "&8Reward Crate %boss% - Tier %tier%"
+  TitleFormat: "&8| Reward Crate %boss% - Tier %tier%"
+
+resin-items:
+  infused-resin:
+    material: "mmoitems-CONSUMABLE:INFUSEDRESIN"
+    amount: 20
 
   
