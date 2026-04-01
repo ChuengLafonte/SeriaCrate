@@ -21,6 +21,7 @@ id\seria\crate\listener\AdminUIListener.class
 id\seria\crate\util\ItemUtils.class
 id\seria\crate\manager\RewardManager.class
 id\seria\crate\gui\editor\EditorMenuManager.class
+id\seria\crate\placeholder\SeriaCratePlaceholder.class
 id\seria\crate\SeriaCrate.class
 id\seria\crate\gui\PreviewGUI.class
 id\seria\crate\manager\ResinManager.class

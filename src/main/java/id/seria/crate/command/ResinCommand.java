@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.OfflinePlayer;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.util.TextUtils;
@@ -136,6 +136,50 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                     }
                     break;
 
+                case "giveitem":
+                    if (!isOnline) {
+                        sender.sendMessage(prefix.append(TextUtils.format("§cPlayer §e" + targetName + "§c harus online untuk menerima item!")));
+                        return true;
+                    }
+
+                    int itemAmount = 1; // Default jumlah item
+                    if (args.length >= 3) {
+                        try {
+                            itemAmount = Integer.parseInt(args[2]);
+                        } catch (NumberFormatException e) {
+                            sender.sendMessage(prefix.append(TextUtils.format("§cJumlah harus berupa angka bulat!")));
+                            return true;
+                        }
+                    }
+
+                    // Mengambil data material dari config.yml
+                    String matString = plugin.getConfigManager().getConfig().getString("resin-items.infused-resin.material", "");
+                    org.bukkit.inventory.ItemStack resinItem = null;
+
+                    // Melakukan Hook ke MMOItems
+                    if (matString.startsWith("mmoitems-")) {
+                        String[] parts = matString.replace("mmoitems-", "").split(":");
+                        if (parts.length == 2) {
+                            try {
+                                resinItem = net.Indyuce.mmoitems.MMOItems.plugin.getItem(net.Indyuce.mmoitems.api.Type.get(parts[0]), parts[1]);
+                            } catch (Exception e) {
+                                sender.sendMessage(prefix.append(TextUtils.format("§cGagal memuat item dari MMOItems! Pastikan tipe dan ID benar.")));
+                                return true;
+                            }
+                        }
+                    }
+
+                    if (resinItem == null || resinItem.getType() == org.bukkit.Material.AIR) {
+                        sender.sendMessage(prefix.append(TextUtils.format("§cItem Infused Resin gagal dimuat. Cek config.yml!")));
+                        return true;
+                    }
+
+                    resinItem.setAmount(itemAmount);
+                    target.getInventory().addItem(resinItem);
+                    sender.sendMessage(prefix.append(TextUtils.format("§aBerhasil memberikan §6" + itemAmount + "x Infused Resin §ake §b" + displayName)));
+                    target.sendMessage(prefix.append(TextUtils.format("§aKamu menerima §6" + itemAmount + "x Infused Resin§a!")));
+                    break;
+
                 default:
                     sender.sendMessage(prefix.append(TextUtils.format("§cTipe aksi tidak diketahui. Gunakan: set, add, take, check.")));
             }
@@ -152,16 +196,20 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
             if (args.length == 1) {
                 completions.add("set"); completions.add("add");
                 completions.add("take"); completions.add("check");
+                completions.add("giveitem"); // Tambahan untuk command baru
             } else if (args.length == 2) {
                 String typed = args[1].toLowerCase();
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (p.getName().toLowerCase().startsWith(typed)) completions.add(p.getName());
                 }
             } else if (args.length == 3 && !args[0].equalsIgnoreCase("check")) {
-                completions.add("10"); completions.add("20");
-                completions.add("50"); completions.add("160");
+                completions.add("1"); completions.add("10"); 
+                completions.add("20"); completions.add("50");
             }
         }
         return completions;
     }
+    
+
+    
 }

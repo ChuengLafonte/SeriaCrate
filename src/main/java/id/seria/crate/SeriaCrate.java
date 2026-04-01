@@ -78,6 +78,14 @@ public class SeriaCrate extends JavaPlugin {
             getCommand("resinadmin").setTabCompleter(resinCmd);
         }
 
+        // Hook ke PlaceholderAPI
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new id.seria.crate.placeholder.SeriaCratePlaceholder(this).register();
+            getLogger().info("PlaceholderAPI terdeteksi! Placeholder SeriaCrate aktif.");
+        } else {
+            getLogger().warning("PlaceholderAPI tidak ditemukan, fitur placeholder tidak akan bekerja.");
+        }
+        
         getLogger().info("SeriaCrate (Modular Version) Aktif!");
     }
 

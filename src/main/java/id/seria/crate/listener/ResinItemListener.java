@@ -14,11 +14,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
 import id.seria.crate.SeriaCrate;
-import id.seria.crate.util.TextUtils;
-import net.kyori.adventure.text.Component;
 
 public class ResinItemListener implements Listener {
 
@@ -67,16 +64,8 @@ public class ResinItemListener implements Listener {
             // Ambil jumlah resin dari config
             int amount = entry.getInt("amount", 20);
 
-            // Cek apakah resin player sudah penuh
-            int max = plugin.getConfigManager().getConfig().getInt("resin.max", 160);
-            int current = plugin.getResinManager().getResin(player.getUniqueId());
-            if (current >= max) {
-                Component prefix = plugin.getConfigManager().getMessage("prefix");
-                player.sendMessage(prefix.append(TextUtils.format(
-                        "<red>Resin kamu sudah penuh! <gray>(" + current + "/" + max + ")")));
-                return;
-            }
-
+            // PENGECEKAN BATAS MAX RESIN DIHAPUS DI SINI AGAR BISA OVERCAP
+            
             // Kurangi item di tangan sebanyak 1
             if (item.getAmount() > 1) {
                 item.setAmount(item.getAmount() - 1);
@@ -85,6 +74,7 @@ public class ResinItemListener implements Listener {
             }
 
             // Eksekusi via console — player tidak bisa eksploitasi manual command
+            // Command 'resinadmin add' akan menambah resin melewati batas karena Math.min sudah dihapus di ResinManager
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                     "resinadmin add " + player.getName() + " " + amount);
 

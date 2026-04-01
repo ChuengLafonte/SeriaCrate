@@ -4,7 +4,7 @@ main: id.seria.crate.SeriaCrate
 api-version: '1.21'
 author: Project Seria Dev
 description: Ultimate Crate Reward System with Gacha Animation
-softdepend: [MMOItems, EcoPets, Vault]
+softdepend: [MMOItems, EcoPets, Vault, PlaceholderAPI]
 
 commands:
   seriacrate:
