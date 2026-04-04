@@ -250,4 +250,8 @@ public class RewardManager {
         }
         return null;
     }
+
+    String getFolder() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

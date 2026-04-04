@@ -25,31 +25,48 @@ public class ConfigManager {
     public void loadAllConfigs() {
         if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdir();
 
+        // [TAMBAHAN] Auto-Cleanup: Hapus file rewards.yml usang di root folder
+        File oldRewardsFile = new File(plugin.getDataFolder(), "rewards.yml");
+        if (oldRewardsFile.exists()) {
+            oldRewardsFile.delete();
+            plugin.getLogger().info("File rewards.yml usang dihapus. Memindahkan sistem ke dalam folder rewards/...");
+        }
+
+        // Pastikan folder rewards/ dibuat terlebih dahulu
+        rewardsFolder = new File(plugin.getDataFolder(), "rewards");
+        if (!rewardsFolder.exists()) {
+            rewardsFolder.mkdir();
+        }
+
+        saveResourceIfNotExists("config.yml");
+        saveResourceIfNotExists("messages.yml");
+        saveResourceIfNotExists("hologram.yml");
+        saveResourceIfNotExists("gui.yml");
+        saveResourceIfNotExists("command.yml");
+
         configFile = new File(plugin.getDataFolder(), "config.yml");
         messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         hologramFile = new File(plugin.getDataFolder(), "hologram.yml");
         guiFile = new File(plugin.getDataFolder(), "gui.yml");
-        commandsFile = new File(plugin.getDataFolder(), "commands.yml");
-
-        createFileIfNotExists(configFile);
-        createFileIfNotExists(messagesFile);
-        createFileIfNotExists(hologramFile);
-        createFileIfNotExists(guiFile);
-        createFileIfNotExists(commandsFile);
+        commandsFile = new File(plugin.getDataFolder(), "command.yml");
 
         config = YamlConfiguration.loadConfiguration(configFile);
         messages = YamlConfiguration.loadConfiguration(messagesFile);
         hologram = YamlConfiguration.loadConfiguration(hologramFile);
         gui = YamlConfiguration.loadConfiguration(guiFile);
         commands = YamlConfiguration.loadConfiguration(commandsFile);
-
-        rewardsFolder = new File(plugin.getDataFolder(), "rewards");
-        if (!rewardsFolder.exists()) rewardsFolder.mkdir();
     }
 
-    private void createFileIfNotExists(File file) {
+    // Metode baru untuk menyalin file dari dalam file .jar plugin ke folder plugin di server
+    private void saveResourceIfNotExists(String fileName) {
+        File file = new File(plugin.getDataFolder(), fileName);
         if (!file.exists()) {
-            try { file.createNewFile(); } catch (IOException e) { plugin.getLogger().severe("Gagal membuat file: " + file.getName()); }
+            try {
+                plugin.saveResource(fileName, false); 
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("File default " + fileName + " tidak ditemukan di dalam JAR, membuat file kosong...");
+                try { file.createNewFile(); } catch (IOException ex) { plugin.getLogger().severe("Gagal membuat file: " + file.getName()); }
+            }
         }
     }
 

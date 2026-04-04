@@ -35,4 +35,12 @@ public class Reward {
     public boolean isBroadcast() {
         return broadcast;
     }
+
+    public String getQuantity() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Object getItemStack() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

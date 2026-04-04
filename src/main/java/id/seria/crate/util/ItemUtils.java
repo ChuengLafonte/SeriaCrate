@@ -2,11 +2,14 @@ package id.seria.crate.util;
 
 import java.io.File;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -18,6 +21,67 @@ import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
 
 public class ItemUtils {
+
+    // ==========================================
+    // [BARU] SISTEM ULTIMATE GUI PARSER
+    // ==========================================
+    public static class GUIItem {
+        public int priority;
+        public List<Integer> slots;
+        public ItemStack item;
+        public GUIItem(int priority, List<Integer> slots, ItemStack item) {
+            this.priority = priority; this.slots = slots; this.item = item;
+        }
+    }
+
+    public static List<Integer> parseSlots(List<String> slotStrings) {
+        List<Integer> slots = new ArrayList<>();
+        if (slotStrings == null) return slots;
+        for (String s : slotStrings) {
+            if (s.contains("-")) {
+                try {
+                    String[] parts = s.split("-");
+                    int start = Integer.parseInt(parts[0].trim());
+                    int end = Integer.parseInt(parts[1].trim());
+                    for (int i = start; i <= end; i++) slots.add(i);
+                } catch (Exception ignored) {}
+            } else {
+                try { slots.add(Integer.parseInt(s.trim())); } catch (Exception ignored) {}
+            }
+        }
+        return slots;
+    }
+
+    public static List<GUIItem> loadGUIItems(ConfigurationSection section) {
+        List<GUIItem> guiItems = new ArrayList<>();
+        if (section == null) return guiItems;
+
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection itemCfg = section.getConfigurationSection(key);
+            if (itemCfg == null) continue;
+
+            int priority = itemCfg.getInt("priority", 0);
+            List<Integer> slots = parseSlots(itemCfg.getStringList("slots"));
+            Material mat = Material.matchMaterial(itemCfg.getString("material", "STONE"));
+            
+            ItemStack item = new ItemStack(mat != null ? mat : Material.STONE);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                if (itemCfg.contains("name")) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemCfg.getString("name")));
+                }
+                if (itemCfg.contains("lore")) {
+                    List<String> lore = new ArrayList<>();
+                    for (String l : itemCfg.getStringList("lore")) lore.add(ChatColor.translateAlternateColorCodes('&', l));
+                    meta.setLore(lore);
+                }
+                item.setItemMeta(meta);
+            }
+            guiItems.add(new GUIItem(priority, slots, item));
+        }
+        return guiItems;
+    }
+    // ==========================================
 
     public static ItemStack buildRewardItem(Reward reward) {
         if (reward.getDisplayItem() == null) return new ItemStack(Material.STONE);
@@ -34,12 +98,11 @@ public class ItemUtils {
         ItemStack item = new ItemStack(mat != null ? mat : Material.ENDER_CHEST);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // Gunakan TextUtils untuk nama & lore
-            meta.displayName(TextUtils.format("<bold><#FFD700>" + bossName.toUpperCase() + " CRATE</bold>"));
-            meta.lore(TextUtils.formatList(Arrays.asList(
-                "&7Letakkan blok ini di lantai", 
-                "&7untuk membuat Crate permanen."
-            )));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&l&e" + bossName.toUpperCase() + " CRATE"));
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.translateAlternateColorCodes('&', "&7Letakkan blok ini di lantai"));
+            lore.add(ChatColor.translateAlternateColorCodes('&', "&7untuk membuat Crate permanen."));
+            meta.setLore(lore);
             meta.getPersistentDataContainer().set(new NamespacedKey(SeriaCrate.getInstance(), "crate_id"), PersistentDataType.STRING, bossName.toLowerCase());
             item.setItemMeta(meta);
         }
@@ -101,7 +164,7 @@ public class ItemUtils {
             } catch(Exception ignored) {}
             ItemStack fb = new ItemStack(Material.PLAYER_HEAD);
             ItemMeta m = fb.getItemMeta(); 
-            m.displayName(TextUtils.format("&aEcoPets: " + parts[1])); 
+            m.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aEcoPets: " + parts[1])); 
             fb.setItemMeta(m);
             return fb;
         } else if (str.startsWith("mmoitems:")) {

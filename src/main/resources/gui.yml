@@ -1,60 +1,191 @@
 # ==========================================
-# PROJECT SERIA - GUI CONFIGURATION
+# PROJECT SERIA - ULTIMATE GUI CONFIGURATION
 # ==========================================
+# Panduan Sistem Priority & Slot:
+# - priority: Angka lebih tinggi (misal 10) akan menimpa item dengan priority lebih rendah (misal 0).
+# - slots: Bisa menggunakan slot tunggal (["4", "13"]) atau rentang/range (["0-8", "45-53"]).
 
 # ==========================================
-# 1. ROULETTE / ROLLING GUI (Animasi CS:GO)
+# 1. PLAYER GUIs (Gacha & Preview)
 # ==========================================
 rolling-gui:
-  # Variabel yang didukung: %boss%, %tier%
-  # PENTING: Sistem menggunakan nama ini untuk mendeteksi GUI Crate agar player tidak bisa mengambil item kaca/hopper-nya.
-  title: "&8Reward Crate %boss% - Tier %tier%"
-  
-  # Ukuran inventory (Harus kelipatan 9: 27, 36, 45, 54)
-  size: 27 
-  
-  # Slot tempat item bergulir dari kiri ke kanan.
-  # Pastikan letaknya berada di baris tengah agar terlihat rapi.
+  title: "&8| Reward Crate %boss% - Tier %tier%" # JANGAN HAPUS KATA 'Reward Crate' (Anti-klik bug)
+  size: 27
   rolling-slots: [9, 10, 11, 12, 13, 14, 15, 16, 17]
-  
-  # Item pengisi celah kosong di dalam GUI (Background)
-  filler:
-    material: BLACK_STAINED_GLASS_PANE
-    name: " "
-    lore: []
-    
-  # Pointer penunjuk kemenangan (berada tepat di atas dan di bawah slot tengah)
-  pointer:
-    slots: [4, 22] # Posisi index slot Hopper
-    material: HOPPER
-    name: "<yellow>▼ <gold>ROLLING <yellow>▼"
-    lore: 
-      - "&7Sedang mengundi nasibmu..."
-      - "&7Semoga beruntung!"
+  fillers:
+    background:
+      priority: 0
+      slots: ["0-8", "18-26"]
+      material: GRAY_STAINED_GLASS_PANE
+      name: " "
+    pointer-top:
+      priority: 1
+      slots: ["4"]
+      material: HOPPER
+      name: "&e&l↓ PEMENANG ↓"
+    pointer-bottom:
+      priority: 1
+      slots: ["22"]
+      material: HOPPER
+      name: "&e&l↑ PEMENANG ↑"
 
-# ==========================================
-# 2. PREVIEW GUI (Melihat Daftar Hadiah)
-# ==========================================
-preview-gui:
-  # Variabel yang didukung: %boss%
-  title: "&8Preview Hadiah: %boss%"
+preview-tier-gui:
+  title: "&8Pilih Tier: %boss%"
+  size: 27
+  fillers:
+    bg:
+      priority: 0
+      slots: ["0-26"]
+      material: BLACK_STAINED_GLASS_PANE
+      name: " "
+  items:
+    s:
+      priority: 1
+      slots: ["11"]
+      material: NETHER_STAR
+      name: "&c&lTier S"
+      lore:
+        - "&7Klik untuk melihat hadiah"
+        - "&7yang ada di Tier ini."
+    a:
+      priority: 1
+      slots: ["12"]
+      material: DIAMOND
+      name: "&6&lTier A"
+      lore:
+        - "&7Klik untuk melihat hadiah"
+        - "&7yang ada di Tier ini."
+    b:
+      priority: 1
+      slots: ["13"]
+      material: GOLD_INGOT
+      name: "&e&lTier B"
+      lore:
+        - "&7Klik untuk melihat hadiah"
+        - "&7yang ada di Tier ini."
+    c:
+      priority: 1
+      slots: ["14"]
+      material: IRON_INGOT
+      name: "&b&lTier C"
+      lore:
+        - "&7Klik untuk melihat hadiah"
+        - "&7yang ada di Tier ini."
+    d:
+      priority: 1
+      slots: ["15"]
+      material: COAL
+      name: "&f&lTier D"
+      lore:
+        - "&7Klik untuk melihat hadiah"
+        - "&7yang ada di Tier ini."
+
+preview-reward-gui:
+  title: "&8Reward: %boss% (%tier%)"
   size: 54
-  filler-material: GRAY_STAINED_GLASS_PANE
+  fillers:
+    bg-bottom:
+      priority: 0
+      slots: ["45-53"]
+      material: GRAY_STAINED_GLASS_PANE
+      name: " "
 
 # ==========================================
-# 3. EDITOR GUI (Khusus Admin /scrate)
+# 2. ADMIN EDITOR GUIs
 # ==========================================
-editor-gui:
-  # Pengaturan Judul (Title) untuk masing-masing menu Editor
-  titles:
-    main-menu: "Editor > Crates"
-    settings: "Editor > ... > Crate"
-    tiers: "Editor > ... > Tiers"
-    reward-list: "Editor > ... > Rewards"
-    reward-edit: "Editor > ... > Reward"
-    win-items: "Edit > Fisik Reward"
-    commands: "Edit > Commands"
-    block-editor: "Pilih Blok (Hal %page%)"
-    
-  # Material kaca yang digunakan sebagai background menu editor
-  filler-material: GRAY_STAINED_GLASS_PANE
+editor-main:
+  title: "Editor > Crates"
+  size: 54
+  fillers:
+    bg-bottom:
+      priority: 0
+      slots: ["45-53"]
+      material: GRAY_STAINED_GLASS_PANE
+      name: " "
+  items:
+    create-new:
+      priority: 1
+      slots: ["50"] # Aslinya di slot dinamis, tapi kita kunci di bawah
+      material: LIME_STAINED_GLASS_PANE
+      name: "&aBuat Crate Baru"
+      lore:
+        - "&7Klik untuk membuat."
+    info:
+      priority: 1
+      slots: ["49"]
+      material: FEATHER
+      name: "&fInfo"
+      lore:
+        - "&7Crate Editor v3.5 (Clean YAML)"
+
+editor-settings:
+  title: "Editor > ... > Crate"
+  size: 54
+  fillers:
+    bg-bottom:
+      priority: 0
+      slots: ["45-53"]
+      material: GRAY_STAINED_GLASS_PANE
+      name: " "
+  items:
+    tipe-crate:
+      priority: 1
+      slots: ["10"]
+      material: MAGMA_CREAM
+      name: "&eTipe Crate"
+    durasi:
+      priority: 1
+      slots: ["11"]
+      material: NAME_TAG
+      name: "&eDurasi Crate"
+    rewards:
+      priority: 1
+      slots: ["13"]
+      material: EMERALD
+      name: "&aRewards"
+      lore:
+        - "&7Atur hadiah crate."
+    resin-cost:
+      priority: 1
+      slots: ["14"]
+      material: SLIME_BALL
+      name: "&9Biaya Resin"
+    hologram-toggle:
+      priority: 1
+      slots: ["15"]
+      material: NETHER_STAR
+      name: "&bHologram"
+    blok-fisik:
+      priority: 1
+      slots: ["16"]
+      material: NAUTILUS_SHELL
+      name: "&dBlok Fisik"
+      lore:
+        - "&7Atur wujud crate."
+    text-offset:
+      priority: 1
+      slots: ["24"]
+      material: OAK_FENCE
+      name: "&eTinggi Teks Hologram"
+    item-offset:
+      priority: 1
+      slots: ["25"]
+      material: IRON_BARS
+      name: "&eTinggi Item Melayang"
+    get-crate:
+      priority: 1
+      slots: ["51"]
+      material: OAK_SIGN
+      name: "&eAmbil Crate"
+      lore:
+        - "&7Dapatkan item fisiknya."
+    info:
+      priority: 1
+      slots: ["49"]
+      material: FEATHER
+      name: "&fInfo"
+    back:
+      priority: 1
+      slots: ["52"]
+      material: BARRIER
+      name: "&cKembali"
