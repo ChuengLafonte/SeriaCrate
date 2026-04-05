@@ -1,64 +1,511 @@
 crate-settings:
-  block: SKELETON_SKULL
+  block: ENDER_CHEST
+  hologram: true
+  duration: 180
+  tier-chance:
+    s: 1.0 # Peluang S Tier (Sangat Langka)
+    a: 9.0
+    b: 20.0
+    c: 30.0
+    d: 40.0
+  text-offset: 2.5
+  is-temporary: true
+  resin-cost: 20
 tiers:
   s:
-    1:
+    '1':
       type: ITEM
       material: mmoitems-MISCELLANEOUS:GLOW_POWDER
+      broadcast: true
       weight: 1
       amount: 1
-    2:
+      commands:
+      - mi give MISCELLANEOUS GLOW_POWDER %player_name% 1
+      display_name: '&x&E&5&6&6&F&FGlow Powder'
+      lore:
+      - '&f'
+      - '&7ʙᴜʙᴜᴋ ʙᴇʀᴄᴀʜᴀʏᴀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '2':
       type: ITEM
       material: mmoitems-MISCELLANEOUS:PLANTING_MACHINE
+      broadcast: true
       weight: 1
       amount: 4
-    3:
+      commands:
+      - mi give MISCELLANEOUS PLANTING_MACHINE %player_name% 1
+      display_name: '&x&E&5&6&6&F&FPlanting Machine'
+      lore:
+      - '&f'
+      - '&7ᴍᴇᴋᴀɴɪꜱᴍᴇ ᴘᴇɴᴀɴᴀᴍ ᴏᴛᴏᴍᴀᴛɪꜱ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '3':
       type: ITEM
       material: mmoitems-MISCELLANEOUS:COMPOSED_DNA
+      broadcast: true
       weight: 1
       amount: 4
-    4:
+      commands:
+      - mi give MISCELLANEOUS COMPOSED_DNA %player_name% 1
+      display_name: '&x&E&5&6&6&F&FComposed DNA'
+      lore:
+      - '&f'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴅɴᴀ ʏᴀɴɢ ᴛɪᴅᴀᴋ ꜱᴛᴀʙɪʟ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '4':
       type: ITEM
       material: mmoitems-MOBDROP:SACRED_GARDEN_SOUL
+      broadcast: true
       weight: 1
       amount: 4
-    5:
+      commands:
+      - mi give MOBDROP SACRED_GARDEN_SOUL %player_name% 1
+      display_name: '&x&F&F&D&A&7&3Sacred Garden Soul'
+      lore:
+      - '&f'
+      - '&f &7ᴊɪᴡᴀ ᴅᴀʀɪ ᴅᴜɴɢᴇᴏɴ ꜱᴀᴄʀᴇᴅ ɢᴀʀᴅᴇɴ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★★&7★'
+    '5':
       type: ITEM
       material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: '&x&F&2&B&8&3&4Archon''s Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ꜱᴜᴘᴇʀ-ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&310.000 XP Pet'
+      - '&7'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
       weight: 2
       amount: 3
-    6:
+      commands:
+      - mi give CONSUMABLE ARCHONPIYAGRA %player_name% 1
+    '6':
       type: ITEM
       material: GOLD_NUGGET
-      display_name: "&6500.000 ⏺ &fɢɪɴꜱ"
-      cmd: "eco give %player% 500000"
+      display_name: '&6500.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
       weight: 1
       amount: 1
-    7:
+      cmd: eco give %player% 500000
+    '7':
       type: ITEM
       material: GOLD_NUGGET
-      display_name: "&6300.000 ⏺ &fɢɪɴꜱ"
-      cmd: "eco give %player% 300000"
+      display_name: '&6300.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
       weight: 2
       amount: 1
-    8:
+      cmd: eco give %player% 300000
+    '8':
       type: ITEM
       material: GOLD_NUGGET
-      display_name: "&6200.000 ⏺ &fɢɪɴꜱ"
-      cmd: "eco give %player% 200000"
+      display_name: '&6200.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
       weight: 3
       amount: 1
-    9:
+      cmd: eco give %player% 200000
+    '9':
       type: PET
-      material: ecopet:fighting_piya_piyaegg
-      display_name: "&ePiya Egg &7[Lvl 1]"
+      material: ecopets:fighting_piya_piyaegg
+      display_name: '&ePiya Egg &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &ePiya Egg&x&8&2&7&D&7&9&o!'
+      broadcast: true
       weight: 1
       amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_piya_piyaegg
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2VkMDM3NDUyMjIzYmRhMTM4MWExN2MzZGFhZmE3MWJhYWM2ZWQ4YWEzYTcxYWUzNjE2M2NmZWI2MTIyN2I0NyJ9fX0=
+      enchant: unbreaking
+      hide_enchant: true
   a:
-    # (Lanjutkan input data skeleton tier a, b, c, d sesuai daftar di atas)
-    1:
+    '1':
       type: ITEM
       material: mmoitems-MOBDROP:ALPHA_COW_DNA
+      broadcast: false
       weight: 1
       amount: 3
-    # ... dst
+      commands:
+      - mi give MOBDROP ALPHA_COW_DNA %player_name% 1
+      display_name: '&x&E&5&6&6&F&FAlpha COW DNA'
+      lore:
+      - '&f'
+      - '&f &7ᴇᴋꜱᴛʀᴀᴋ ᴅɴᴀ ᴅᴀʀɪ ꜱᴀᴘɪ'
+      - '&f &7ʀᴀᴋꜱᴀꜱᴀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '2':
+      type: ITEM
+      material: mmoitems-MOBDROP:ALPHA_CHICKEN_DNA
+      broadcast: false
+      weight: 1
+      amount: 3
+      commands:
+      - mi give MOBDROP ALPHA_CHICKEN_DNA %player_name% 1
+      display_name: '&x&E&5&6&6&F&FAlpha Chicken DNA'
+      lore:
+      - '&f'
+      - '&f &7ᴇᴋꜱᴛʀᴀᴋ ᴅɴᴀ ᴅᴀʀɪ ᴀʏᴀᴍ'
+      - '&f &7ʀᴀᴋꜱᴀꜱᴀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '3':
+      type: ITEM
+      material: mmoitems-MOBDROP:NETHERITE_PIECE
+      broadcast: false
+      weight: 1
+      amount: 3
+      commands:
+      - mi give MOBDROP NETHERITE_PIECE %player_name% 1
+      display_name: '&x&E&5&6&6&F&FNetherite Piece'
+      lore:
+      - '&f'
+      - '&f &7ᴘᴇᴄᴀʜᴀɴ ᴋᴀᴘᴀᴋ ɴᴇᴛʜᴇʀɪᴛᴇ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '4':
+      type: ITEM
+      material: mmoitems-MOBDROP:STONE_GOLEM_CORE
+      broadcast: false
+      weight: 2
+      amount: 5
+      commands:
+      - mi give MOBDROP STONE_GOLEM_CORE %player_name% 1
+      display_name: '&x&E&5&6&6&F&FStone Golem Core'
+      lore:
+      - '&f'
+      - '&f &7ɪɴᴛɪ ᴋᴇʜɪᴅᴜᴘᴀɴ ꜱᴇʙᴜᴀʜ ɢᴏʟᴇᴍ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '5':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      display_name: '&x&F&2&B&8&3&4Archon''s Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ꜱᴜᴘᴇʀ-ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&310.000 XP Pet'
+      - '&7'
+      broadcast: false
+      weight: 1
+      amount: 1
+      commands:
+      - mi give CONSUMABLE ARCHONPIYAGRA %player_name% 1
+      enchant: unbreaking
+      hide_enchant: true
+    '6':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      display_name: '&x&F&2&B&8&3&4Piya-Gra'
+      broadcast: false
+      weight: 2
+      amount: 4
+      commands:
+      - mi give CONSUMABLE PIYAGRA %player_name% 1
+      lore:
+      - '&f'
+      - '&7ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&35.000 XP Pet'
+      - '&7'
+    '7':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6300.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 300000
+    '8':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6200.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 200000
+    '9':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 150000
+    '10':
+      type: PET
+      material: ecopets:fighting_piya_piyaegg
+      broadcast: false
+      weight: 1
+      amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_piya_piyaegg
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2VkMDM3NDUyMjIzYmRhMTM4MWExN2MzZGFhZmE3MWJhYWM2ZWQ4YWEzYTcxYWUzNjE2M2NmZWI2MTIyN2I0NyJ9fX0=
+      display_name: '&ePiya Egg &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &ePiya Egg&x&8&2&7&D&7&9&o!'
+      enchant: unbreaking
+      hide_enchant: true
+  b:
+    '1':
+      type: ITEM
+      material: mmoitems-MOBDROP:ALPHA_COW_DNA
+      broadcast: false
+      weight: 1
+      amount: 2
+      commands:
+      - mi give MOBDROP ALPHA_COW_DNA %player_name% 1
+      display_name: '&x&E&5&6&6&F&FAlpha COW DNA'
+      lore:
+      - '&f'
+      - '&f &7ᴇᴋꜱᴛʀᴀᴋ ᴅɴᴀ ᴅᴀʀɪ ꜱᴀᴘɪ'
+      - '&f &7ʀᴀᴋꜱᴀꜱᴀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '2':
+      type: ITEM
+      material: mmoitems-MOBDROP:ALPHA_CHICKEN_DNA
+      broadcast: false
+      weight: 1
+      amount: 2
+      commands:
+      - mi give MOBDROP ALPHA_CHICKEN_DNA %player_name% 1
+      display_name: '&x&E&5&6&6&F&FAlpha Chicken DNA'
+      lore:
+      - '&f'
+      - '&f &7ᴇᴋꜱᴛʀᴀᴋ ᴅɴᴀ ᴅᴀʀɪ ᴀʏᴀᴍ'
+      - '&f &7ʀᴀᴋꜱᴀꜱᴀ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★★&7★★'
+    '3':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      broadcast: false
+      weight: 2
+      amount: 3
+      commands:
+      - mi give CONSUMABLE PIYAGRA %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&35.000 XP Pet'
+      - '&7'
+    '4':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 3
+      amount: 5
+      commands:
+      - mi give CONSUMABLE OPENEDCANFOOD %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Opened Can Food'
+      lore:
+      - '&f'
+      - '&7ᴋᴀʟᴇɴɢ ᴍᴀᴋᴀɴᴀɴ ʏᴀɴɢ ꜱᴜᴅᴀʜ'
+      - '&7ᴛᴇʀʙᴜᴋᴀ, ᴛᴇʀᴅᴀᴘᴀᴛ ꜱɪꜱᴀ ᴍᴀᴋᴀɴᴀɴ'
+      - '&7ᴅɪ ᴅᴀʟᴀᴍɴʏᴀ.'
+      - '&7'
+      - '&x&4&3&E&9&4&3100 XP Pet'
+      - '&7'
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 150000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 75000
+    '7':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 50000
+  c:
+    '1':
+      type: ITEM
+      material: mmoitems-MOBDROP:HANDLE
+      broadcast: false
+      weight: 3
+      amount: 10
+      commands:
+      - mi give MOBDROP HANDLE %player_name% 1
+      display_name: '&x&5&2&8&6&F&FWeapon Handle'
+      lore:
+      - '&f'
+      - '&f &7ɢᴀɢᴀɴɢ ꜱᴇɴᴊᴀᴛᴀ ʏᴀɴɢ ꜱᴜᴅᴀʜ ᴘᴀᴛᴀʜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '2':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      broadcast: false
+      weight: 2
+      amount: 1
+      commands:
+      - mi give CONSUMABLE PIYAGRA %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Piya-Gra'
+      lore:
+      - '&f'
+      - '&7ᴘʀᴇᴍɪᴜᴍ ᴘᴇᴛ ꜰᴏᴏᴅ!'
+      - '&7ᴘᴇᴛ ꜱᴀɴɢᴀᴛ ᴍᴇɴʏᴜᴋᴀɪ ʀᴀꜱᴀ'
+      - '&7ᴄᴀᴍᴘᴜʀᴀɴ ᴜɴɪᴋ ɪɴɪ.'
+      - '&7'
+      - '&x&4&3&E&9&4&35.000 XP Pet'
+      - '&7'
+    '3':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 3
+      amount: 3
+      commands:
+      - mi give CONSUMABLE OPENEDCANFOOD %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Opened Can Food'
+      lore:
+      - '&f'
+      - '&7ᴋᴀʟᴇɴɢ ᴍᴀᴋᴀɴᴀɴ ʏᴀɴɢ ꜱᴜᴅᴀʜ'
+      - '&7ᴛᴇʀʙᴜᴋᴀ, ᴛᴇʀᴅᴀᴘᴀᴛ ꜱɪꜱᴀ ᴍᴀᴋᴀɴᴀɴ'
+      - '&7ᴅɪ ᴅᴀʟᴀᴍɴʏᴀ.'
+      - '&7'
+      - '&x&4&3&E&9&4&3100 XP Pet'
+      - '&7'
+    '4':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 75000
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 50000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 25000
+  d:
+    '1':
+      type: ITEM
+      material: mmoitems-MOBDROP:HANDLE
+      broadcast: false
+      weight: 3
+      amount: 6
+      commands:
+      - mi give MOBDROP HANDLE %player_name% 1
+      display_name: '&x&5&2&8&6&F&FWeapon Handle'
+      lore:
+      - '&f'
+      - '&f &7ɢᴀɢᴀɴɢ ꜱᴇɴᴊᴀᴛᴀ ʏᴀɴɢ ꜱᴜᴅᴀʜ ᴘᴀᴛᴀʜ.'
+      - '&f'
+      - '&x&F&F&F&8&0&0★★&7★★★'
+    '2':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 3
+      amount: 2
+      commands:
+      - mi give CONSUMABLE OPENEDCANFOOD %player_name% 1
+      display_name: '&x&F&2&B&8&3&4Opened Can Food'
+      lore:
+      - '&f'
+      - '&7ᴋᴀʟᴇɴɢ ᴍᴀᴋᴀɴᴀɴ ʏᴀɴɢ ꜱᴜᴅᴀʜ'
+      - '&7ᴛᴇʀʙᴜᴋᴀ, ᴛᴇʀᴅᴀᴘᴀᴛ ꜱɪꜱᴀ ᴍᴀᴋᴀɴᴀɴ'
+      - '&7ᴅɪ ᴅᴀʟᴀᴍɴʏᴀ.'
+      - '&7'
+      - '&x&4&3&E&9&4&3100 XP Pet'
+      - '&7'
+    '3':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 25000
+    '4':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&620.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 20000
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&615.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 15000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&610.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 10000
