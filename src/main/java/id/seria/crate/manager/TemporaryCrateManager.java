@@ -2,7 +2,6 @@ package id.seria.crate.manager;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,16 +15,33 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Display.Billboard;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
-import de.oliver.fancyholograms.api.FancyHologramsPlugin;
-import de.oliver.fancyholograms.api.data.TextHologramData;
-import de.oliver.fancyholograms.api.hologram.Hologram;
 import id.seria.crate.SeriaCrate;
+import id.seria.crate.model.Reward;
+import id.seria.crate.util.ItemUtils;
 
 public class TemporaryCrateManager {
     private final SeriaCrate plugin;
     private final Map<UUID, ActiveCrate> activeCrates = new HashMap<>();
+    private float rotationYaw = 0f;
+
+    // Helper class (sama seperti CrateLocationManager)
+    private static class RewardTierPair {
+        final Reward reward;
+        final String tierId;
+        RewardTierPair(Reward reward, String tierId) {
+            this.reward = reward;
+            this.tierId = tierId;
+        }
+    }
 
     public TemporaryCrateManager(SeriaCrate plugin) {
         this.plugin = plugin;
@@ -44,79 +60,140 @@ public class TemporaryCrateManager {
         boolean useHolo = config.getBoolean("crate-settings.hologram", true);
         int duration = config.getInt("crate-settings.duration", 180);
         
-        Hologram hologram = null;
+        TextDisplay textDisplay = null;
+        ItemDisplay itemDisplay = null;
+        TextDisplay itemLabel = null;
         List<String> customLines = new ArrayList<>();
 
         if (useHolo) {
             FileConfiguration holoConfig = this.plugin.getConfigManager().getHologram();
             customLines = holoConfig.getStringList("holograms." + bossName);
             if (customLines.isEmpty()) {
-                customLines = Arrays.asList("&e&l" + bossName.toUpperCase() + " CRATE", "&7Menghilang dalam: &c%timer%");
+                customLines = java.util.Arrays.asList("&e&l" + bossName.toUpperCase() + " CRATE", "&7Menghilang dalam: &c%timer%");
             }
 
-            // Ketinggian disamakan dengan Crate Permanen agar presisi
-            Location holoLoc = loc.clone().add(0.5D, 1.2D, 0.5D);
-            String holoName = "tempcrate_" + crateId.toString().substring(0, 8);
-            
-            TextHologramData holoData = new TextHologramData(holoName, holoLoc);
-            
-            List<String> initialText = new ArrayList<>();
-            for (String line : customLines) {
-                initialText.add(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", "Menghitung...")));
-            }
+            double textOffset = config.getDouble("crate-settings.text-offset", 1.2D);
+            double itemOffset = config.getDouble("crate-settings.item-offset", 1.8D);
 
-            holoData.setText(initialText);
-            holoData.setPersistent(false); // Mencegah hologram tersimpan permanen ke config FancyHolograms
-            
-            hologram = FancyHologramsPlugin.get().getHologramManager().create(holoData);
-            
-            // Cukup gunakan addHologram, FancyHolograms akan otomatis me-render ke player.
-            FancyHologramsPlugin.get().getHologramManager().addHologram(hologram);
+            // 1. Text Display Utama (Hologram Timer)
+            Location holoLoc = loc.clone().add(0.5D, textOffset, 0.5D);
+            textDisplay = holoLoc.getWorld().spawn(holoLoc, TextDisplay.class);
+            textDisplay.setBillboard(Billboard.CENTER);
+            textDisplay.setDefaultBackground(false);
+
+            // 2. Item Display (Animasi Melayang)
+            Location itemLoc = loc.clone().add(0.5D, itemOffset, 0.5D);
+            itemDisplay = itemLoc.getWorld().spawn(itemLoc, ItemDisplay.class);
+            itemDisplay.setItemStack(new ItemStack(Material.CHEST));
+            itemDisplay.setBillboard(Billboard.FIXED);
+            Transformation transformation = itemDisplay.getTransformation();
+            transformation.getScale().set(new Vector3f(0.7f, 0.7f, 0.7f));
+            itemDisplay.setTransformation(transformation);
+
+            // 3. Text Display Label (Nama Item)
+            Location labelLoc = loc.clone().add(0.5D, itemOffset + 0.3D, 0.5D); 
+            itemLabel = labelLoc.getWorld().spawn(labelLoc, TextDisplay.class);
+            itemLabel.setBillboard(Billboard.CENTER);
+            itemLabel.setDefaultBackground(false);
+            Transformation textTransform = itemLabel.getTransformation();
+            textTransform.getScale().set(new Vector3f(0.8f, 0.8f, 0.8f));
+            itemLabel.setTransformation(textTransform);
         }
 
-        ActiveCrate crate = new ActiveCrate(crateId, loc, bossName, hologram, duration, customLines);
+        ActiveCrate crate = new ActiveCrate(crateId, loc, bossName, duration, customLines, textDisplay, itemDisplay, itemLabel);
         this.activeCrates.put(crateId, crate);
     }
 
     private void startHologramUpdater() {
+        // Scheduler berjalan 1 tick (sangat cepat) agar animasi putaran item mulus
         new BukkitRunnable() {
             @Override
             public void run() {
+                rotationYaw += 0.05f;
+                long timeSeconds = System.currentTimeMillis() / 2000; // Cycle item setiap 2 detik
+                String[] tiersList = {"s", "a", "b", "c", "d"};
+
                 Iterator<Map.Entry<UUID, ActiveCrate>> iterator = activeCrates.entrySet().iterator();
 
                 while (iterator.hasNext()) {
                     Map.Entry<UUID, ActiveCrate> entry = iterator.next();
                     ActiveCrate crate = entry.getValue();
-                    crate.timeLeft--;
 
+                    // --- LOGIKA HITUNG MUNDUR (DIKURANGI SETIAP 20 TICK) ---
+                    // Menggunakan logic ini karena scheduler sekarang berjalan setiap 1 tick
+                    if (crate.tickCounter >= 20) {
+                        crate.timeLeft--;
+                        crate.tickCounter = 0;
+                    } else {
+                        crate.tickCounter++;
+                    }
+
+                    // --- LOGIKA HANCUR ---
                     if (crate.timeLeft <= 0) {
                         crate.location.getBlock().setType(Material.AIR);
-                        if (crate.hologram != null) {
-                            // API Terbaru: Gunakan removeHologram dari manager
-                            FancyHologramsPlugin.get().getHologramManager().removeHologram(crate.hologram);
-                        }
+                        if (crate.textDisplay != null && crate.textDisplay.isValid()) crate.textDisplay.remove();
+                        if (crate.itemDisplay != null && crate.itemDisplay.isValid()) crate.itemDisplay.remove();
+                        if (crate.itemLabel != null && crate.itemLabel.isValid()) crate.itemLabel.remove();
                         iterator.remove();
-                    } else {
-                        if (crate.hologram != null) {
-                            int min = crate.timeLeft / 60;
-                            int sec = crate.timeLeft % 60;
-                            String timeStr = String.format("%02d:%02d", min, sec);
-                            
-                            List<String> updatedLines = new ArrayList<>();
-                            for (String line : crate.customLines) {
-                                updatedLines.add(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", timeStr)));
-                            }
+                        continue;
+                    }
 
-                            if (crate.hologram.getData() instanceof TextHologramData) {
-                                TextHologramData textData = (TextHologramData) crate.hologram.getData();
-                                textData.setText(updatedLines);
-                                crate.hologram.forceUpdate(); // Mengirim pembaruan teks (countdown timer) ke pemain
+                    // --- LOGIKA UPDATE TAMPILAN TEXT & ITEM ---
+                    if (crate.textDisplay != null && crate.textDisplay.isValid()) {
+                        
+                        // 1. Update Timer Teks Hologram
+                        int min = crate.timeLeft / 60;
+                        int sec = crate.timeLeft % 60;
+                        String timeStr = String.format("%02d:%02d", min, sec);
+                        
+                        StringBuilder sb = new StringBuilder();
+                        for (String line : crate.customLines) {
+                            sb.append(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", timeStr))).append("\n");
+                        }
+                        crate.textDisplay.setText(sb.toString().trim());
+
+                        // 2. Putar dan Ganti Item Melayang
+                        if (crate.itemDisplay != null && crate.itemDisplay.isValid()) {
+                            Transformation transform = crate.itemDisplay.getTransformation();
+                            transform.getLeftRotation().set(new AxisAngle4f(rotationYaw, 0, 1, 0));
+                            crate.itemDisplay.setTransformation(transform);
+
+                            List<RewardTierPair> allRewardsWithTiers = new ArrayList<>();
+                            for (String t : tiersList) {
+                                List<Reward> rewardsOfTier = plugin.getRewardManager().getRewardsFor(crate.bossName, t);
+                                for (Reward r : rewardsOfTier) {
+                                    allRewardsWithTiers.add(new RewardTierPair(r, t));
+                                }
+                            }
+                            
+                            if (!allRewardsWithTiers.isEmpty()) {
+                                int index = (int) (timeSeconds % allRewardsWithTiers.size());
+                                RewardTierPair current = allRewardsWithTiers.get(index);
+                                Reward reward = current.reward;
+                                String tierId = current.tierId;
+
+                                ItemStack previewItem = ItemUtils.buildRewardItem(reward);
+                                crate.itemDisplay.setItemStack(previewItem);
+
+                                // 3. Update Label Item
+                                if (crate.itemLabel != null && crate.itemLabel.isValid()) {
+                                    String coloredItemName;
+                                    if (previewItem.hasItemMeta() && previewItem.getItemMeta().hasDisplayName()) {
+                                        coloredItemName = previewItem.getItemMeta().getDisplayName();
+                                    } else {
+                                        coloredItemName = "§f" + previewItem.getType().name().replace("_", " ");
+                                    }
+                                    
+                                    String quantity = "§f" + reward.getAmount() + "x";
+                                    String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
+                                    crate.itemLabel.setText(quantity + " " + coloredItemName + " " + tierLabel);
+                                }
                             }
                         }
                     }
                 }
             }
-        }.runTaskTimer(this.plugin, 0L, 20L);
+        }.runTaskTimer(this.plugin, 0L, 1L); // Berjalan 1 tick agar animasi putaran item mulus
     }
 
     public ActiveCrate getCrateAt(Location loc) {
@@ -133,29 +210,46 @@ public class TemporaryCrateManager {
     public void forceClearAllCrates() {
         for (ActiveCrate crate : this.activeCrates.values()) {
             crate.location.getBlock().setType(Material.AIR);
-            if (crate.hologram != null) {
-                FancyHologramsPlugin.get().getHologramManager().removeHologram(crate.hologram);
-            }
+            if (crate.textDisplay != null && crate.textDisplay.isValid()) crate.textDisplay.remove();
+            if (crate.itemDisplay != null && crate.itemDisplay.isValid()) crate.itemDisplay.remove();
+            if (crate.itemLabel != null && crate.itemLabel.isValid()) crate.itemLabel.remove();
         }
         this.activeCrates.clear();
+    }
+
+    private static String getTierColorLegacy(String tier) {
+        switch (tier.toLowerCase()) {
+            case "s": return "§c§l";
+            case "a": return "§6§l";
+            case "b": return "§e§l";
+            case "c": return "§b§l";
+            default: return "§f§l";
+        }
     }
 
     public static class ActiveCrate {
         public UUID id;
         public Location location;
         public String bossName;
-        public Hologram hologram;
         public int timeLeft;
+        public int tickCounter = 0; // Digunakan untuk menghitung tick per detik
         public List<String> customLines; 
         public Set<UUID> claimedPlayers = new HashSet<>();
+        
+        public TextDisplay textDisplay;
+        public ItemDisplay itemDisplay;
+        public TextDisplay itemLabel;
 
-        public ActiveCrate(UUID id, Location location, String bossName, Hologram hologram, int timeLeft, List<String> customLines) {
+        public ActiveCrate(UUID id, Location location, String bossName, int timeLeft, List<String> customLines, 
+                           TextDisplay textDisplay, ItemDisplay itemDisplay, TextDisplay itemLabel) {
             this.id = id;
             this.location = location;
             this.bossName = bossName;
-            this.hologram = hologram;
             this.timeLeft = timeLeft;
             this.customLines = customLines;
+            this.textDisplay = textDisplay;
+            this.itemDisplay = itemDisplay;
+            this.itemLabel = itemLabel;
         }
     }
 }

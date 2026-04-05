@@ -4,6 +4,7 @@ id\seria\crate\engine\RollingEngine.class
 id\seria\crate\engine\RollingEngine$2$1.class
 id\seria\crate\manager\ConfigManager.class
 id\seria\crate\engine\RollingEngine$1.class
+id\seria\crate\manager\TemporaryCrateManager$RewardTierPair.class
 id\seria\crate\model\Reward.class
 id\seria\crate\gui\editor\EditorListener$ChatPrompt.class
 id\seria\crate\manager\CrateLocationManager$RewardTierPair.class

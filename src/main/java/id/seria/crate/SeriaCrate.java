@@ -120,7 +120,7 @@ public class SeriaCrate extends JavaPlugin {
         if (!sender.hasPermission("seriacrate.admin")) return true;
 
         if (args.length == 0) {
-            sender.sendMessage(TextUtils.format("<yellow>/scrate spawn <boss> <x> <y> <z>"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate spawn <boss>")); // Diubah agar lebih ringkas
             sender.sendMessage(TextUtils.format("<yellow>/scrate editor"));
             sender.sendMessage(TextUtils.format("<yellow>/scrate givecrate <boss> [player]"));
             sender.sendMessage(TextUtils.format("<yellow>/scrate open <player> <boss> <tier>"));
@@ -148,20 +148,22 @@ public class SeriaCrate extends JavaPlugin {
             return true;
         }
 
-        // /scrate spawn
-        if (args[0].equalsIgnoreCase("spawn") && args.length >= 5) {
-            try {
-                String boss = args[1].toLowerCase();
-                double x = Double.parseDouble(args[2]);
-                double y = Double.parseDouble(args[3]);
-                double z = Double.parseDouble(args[4]);
-                Location loc = new Location(((Player) sender).getWorld(), x, y, z);
-                tempCrateManager.spawnTemporaryCrate(loc, boss);
-                sender.sendMessage(TextUtils.format("<#00FF00>Berhasil spawn Crate <bold>"
-                        + boss.toUpperCase() + "</bold> sementara!"));
-            } catch (Exception e) {
-                sender.sendMessage(TextUtils.format("<red>Koordinat harus berupa angka!"));
+        // /scrate spawn <boss> (Menggunakan lokasi player otomatis)
+        if (args[0].equalsIgnoreCase("spawn") && args.length >= 2) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(TextUtils.format("<red>Command ini hanya bisa digunakan oleh player di dalam game!"));
+                return true;
             }
+            
+            Player player = (Player) sender;
+            String boss = args[1].toLowerCase();
+            
+            // Mengambil koordinat blok tempat player berdiri
+            Location loc = player.getLocation().getBlock().getLocation();
+            
+            tempCrateManager.spawnTemporaryCrate(loc, boss);
+            sender.sendMessage(TextUtils.format("<#00FF00>Berhasil spawn Crate <bold>"
+                    + boss.toUpperCase() + "</bold> sementara di lokasimu!"));
             return true;
         }
 
@@ -217,20 +219,14 @@ public class SeriaCrate extends JavaPlugin {
                 for (Player p : Bukkit.getOnlinePlayers()) completions.add(p.getName());
             }
         } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("spawn")) {
-                completions.add("<x>");
-                if (sender instanceof Player)
-                    completions.add(String.valueOf(((Player) sender).getLocation().getBlockX()));
-            } else if (args[0].equalsIgnoreCase("open")) {
+            if (args[0].equalsIgnoreCase("open")) {
                 completions.addAll(bosses);
             } else if (args[0].equalsIgnoreCase("givecrate")) {
                 for (Player p : Bukkit.getOnlinePlayers()) completions.add(p.getName());
             }
+            // Argumen X, Y, Z dihapus karena sekarang otomatis
         } else if (args.length == 4) {
             if (args[0].equalsIgnoreCase("open")) completions.addAll(tiers);
-            else if (args[0].equalsIgnoreCase("spawn")) completions.add("<y>");
-        } else if (args.length == 5 && args[0].equalsIgnoreCase("spawn")) {
-            completions.add("<z>");
         }
 
         String currentArg = args[args.length - 1].toLowerCase();
