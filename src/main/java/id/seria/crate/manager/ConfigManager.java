@@ -89,10 +89,13 @@ public class ConfigManager {
         File rewardsFolder = new File(plugin.getDataFolder(), "rewards");
         if (!rewardsFolder.exists()) {
             rewardsFolder.mkdirs();
-            String[] defaultRewards = {"saok.yml", "skeleton.yml", "hallow.yml"};
-            for (String fileName : defaultRewards) {
-                File file = new File(rewardsFolder, fileName);
-                if (!file.exists()) plugin.saveResource("rewards/" + fileName, false);
+        }
+        
+        String[] defaultRewards = {"malkor.yml", "shikanoko.yml", "skeleton.yml"};
+        for (String fileName : defaultRewards) {
+            File file = new File(rewardsFolder, fileName);
+            if (!file.exists()) {
+                plugin.saveResource("rewards/" + fileName, false);
             }
         }
     }

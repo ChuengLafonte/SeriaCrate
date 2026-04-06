@@ -1,16 +1,16 @@
 holograms:
-  saok:
-    - "&e&lSAOK CRATE"
+  shikanoko:
+    - "&e&lShikanoko Crate"
     - "&7Menghilang dalam: &c%timer%"
     - "&fKlik Kiri: &aPreview"
     - "&fKlik Kanan: &eBuka"
   skeleton:
-    - "&f&lSKELETON CRATE"
+    - "&f&lCrazied Skeleton Crate"
     - "&7Sisa Waktu: &c%timer%"
     - "&fKlik Kiri: &aPreview"
     - "&fKlik Kanan: &eBuka"
-  hallow:
-    - "&6&lHALLOW CRATE"
+  malkor:
+    - "&6&lMalkor Crate"
     - "&7Waktu tersisa: &c%timer%"
     - "&fKlik Kiri: &aPreview"
     - "&fKlik Kanan: &eBuka"

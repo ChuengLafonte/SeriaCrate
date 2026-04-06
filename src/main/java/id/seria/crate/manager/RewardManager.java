@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -28,6 +29,10 @@ public class RewardManager {
     private final Map<String, Map<String, List<Reward>>> crateRewards = new HashMap<>();
 
     public RewardManager(SeriaCrate plugin) { this.plugin = plugin; }
+
+    public Set<String> getCrateIds() {
+        return crateRewards.keySet();
+    }
 
     public void loadRewards() {
         crateRewards.clear();

@@ -205,7 +205,7 @@ public class SeriaCrate extends JavaPlugin {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         List<String> commands = Arrays.asList("spawn", "open", "reload", "editor", "givecrate");
-        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow");
+        List<String> bosses = new ArrayList<>(rewardManager.getCrateIds());
         List<String> tiers = Arrays.asList("s", "a", "b", "c", "d");
 
         if (!sender.hasPermission("seriacrate.admin")) return completions;
