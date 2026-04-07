@@ -14,6 +14,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import net.kyori.adventure.text.Component;
+import id.seria.crate.util.TextUtils;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
@@ -25,10 +27,10 @@ public class EditorMenuManager {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(name);
-            List<String> loreList = new ArrayList<>();
-            for (String l : lore) loreList.add(l);
-            meta.setLore(loreList);
+            meta.displayName(TextUtils.format(name));
+            List<Component> loreList = new ArrayList<>();
+            for (String l : lore) loreList.add(TextUtils.format(l));
+            meta.lore(loreList);
             item.setItemMeta(meta);
         }
         return item;
@@ -47,7 +49,7 @@ public class EditorMenuManager {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.MAIN_MENU, null, null, -1);
         FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
         int size = guiConfig.getInt("editor-main.size", 54);
-        String title = org.bukkit.ChatColor.translateAlternateColorCodes('&', guiConfig.getString("editor-main.title", "Editor > Crates"));
+        Component title = TextUtils.format(guiConfig.getString("editor-main.title", "Editor > Crates"));
         Inventory inv = Bukkit.createInventory(holder, size, title);
         holder.setInventory(inv);
 
@@ -88,7 +90,7 @@ public class EditorMenuManager {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.CRATE_SETTINGS, crateId, null, -1);
         FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
         int size = guiConfig.getInt("editor-settings.size", 54);
-        String title = org.bukkit.ChatColor.translateAlternateColorCodes('&', guiConfig.getString("editor-settings.title", "Editor > ... > Crate"));
+        Component title = TextUtils.format(guiConfig.getString("editor-settings.title", "Editor > ... > Crate"));
         Inventory inv = Bukkit.createInventory(holder, size, title);
         holder.setInventory(inv);
 
@@ -112,30 +114,31 @@ public class EditorMenuManager {
             ItemStack item = gItem.item.clone();
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasDisplayName()) {
-                String name = org.bukkit.ChatColor.stripColor(meta.getDisplayName());
-                List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+                String name = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+                List<Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
+                if (lore == null) lore = new ArrayList<>();
                 
                 // INJECT DYNAMIC DATA
-                if (name.contains("Tipe Crate")) {
-                    lore.add(0, "§7Saat ini: " + (isTemp ? "§cSementara" : "§aPermanen"));
-                    lore.add("§7Klik untuk mengubah.");
-                } else if (name.contains("Durasi")) {
-                    lore.add("§7Saat ini: §f" + duration + "s");
-                    lore.add("§7Klik untuk mengubah.");
-                } else if (name.contains("Biaya Resin")) {
-                    lore.add("§7Saat ini: §b" + resinCost + " 🔲");
-                    lore.add(" "); lore.add("§7Klik untuk mengatur biaya resin"); lore.add("§7saat membuka crate.");
-                } else if (name.contains("Hologram") && !name.contains("Tinggi")) {
-                    lore.add("§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI"));
-                    lore.add(" "); lore.add("§7Klik untuk Mengaktifkan/Mematikan");
-                } else if (name.contains("Tinggi Teks Hologram")) {
-                    lore.add("§7Saat ini: §f" + textOffset);
-                    lore.add("§7Klik untuk mengubah (misal: 1.2).");
-                } else if (name.contains("Tinggi Item Melayang")) {
-                    lore.add("§7Saat ini: §f" + itemOffset);
-                    lore.add("§7Klik untuk mengubah (misal: 2.0).");
+                if (name != null && name.contains("Tipe Crate")) {
+                    lore.add(0, TextUtils.format("§7Saat ini: " + (isTemp ? "§cSementara" : "§aPermanen")));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah."));
+                } else if (name != null && name.contains("Durasi")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + duration + "s"));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah."));
+                } else if (name != null && name.contains("Biaya Resin")) {
+                    lore.add(TextUtils.format("§7Saat ini: §b" + resinCost + " 🔲"));
+                    lore.add(Component.empty()); lore.add(TextUtils.format("§7Klik untuk mengatur biaya resin")); lore.add(TextUtils.format("§7saat membuka crate."));
+                } else if (name != null && name.contains("Hologram") && !name.contains("Tinggi")) {
+                    lore.add(TextUtils.format("§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI")));
+                    lore.add(Component.empty()); lore.add(TextUtils.format("§7Klik untuk Mengaktifkan/Mematikan"));
+                } else if (name != null && name.contains("Tinggi Teks Hologram")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + textOffset));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah (misal: 1.2)."));
+                } else if (name != null && name.contains("Tinggi Item Melayang")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + itemOffset));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah (misal: 2.0)."));
                 }
-                meta.setLore(lore);
+                meta.lore(lore);
                 item.setItemMeta(meta);
             }
 
@@ -148,7 +151,7 @@ public class EditorMenuManager {
 
     public static void openTierSelection(Player player, String crateId) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.TIER_SELECTION, crateId, null, -1);
-        Inventory inv = Bukkit.createInventory(holder, 27, "Editor > ... > Tiers");
+        Inventory inv = Bukkit.createInventory(holder, 27, TextUtils.format("Editor > ... > Tiers"));
         holder.setInventory(inv);
 
         inv.setItem(11, createIcon(Material.NETHER_STAR, "§cTIER S"));
@@ -162,7 +165,7 @@ public class EditorMenuManager {
 
     public static void openRewardList(Player player, String crateId, String tierId) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_LIST, crateId, tierId, -1);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > ... > Rewards");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Editor > ... > Rewards"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -182,15 +185,16 @@ public class EditorMenuManager {
                     ItemMeta m = display.getItemMeta();
                     m.getPersistentDataContainer().set(idKey, PersistentDataType.STRING, key);
 
-                    List<String> lore = m.getLore() == null ? new ArrayList<>() : m.getLore();
-                    lore.add(" ");
-                    lore.add("§8ID: " + key);
-                    lore.add("§fWeight/Peluang: §e" + reward.getWeight());
-                    lore.add("§fJumlah GUI: §a" + reward.getAmount());
-                    lore.add(" ");
-                    lore.add("§a[KLIK KIRI] §7Edit Detail");
-                    lore.add("§c[SHIFT + KLIK KANAN] §7Hapus Reward");
-                    m.setLore(lore);
+                    List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                    if (lore == null) lore = new ArrayList<>();
+                    lore.add(Component.empty());
+                    lore.add(TextUtils.format("&8ID: " + key));
+                    lore.add(TextUtils.format("&fWeight/Peluang: &e" + reward.getWeight()));
+                    lore.add(TextUtils.format("&fJumlah GUI: &a" + reward.getAmount()));
+                    lore.add(Component.empty());
+                    lore.add(TextUtils.format("&a[KLIK KIRI] &7Edit Detail"));
+                    lore.add(TextUtils.format("&c[SHIFT + KLIK KANAN] &7Hapus Reward"));
+                    m.lore(lore);
                     display.setItemMeta(m);
                     inv.setItem(slot, display);
                     slot++;
@@ -210,7 +214,7 @@ public class EditorMenuManager {
 
     public static void openRewardEdit(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_EDIT, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > ... > Reward");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Editor > ... > Reward"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -248,7 +252,7 @@ public class EditorMenuManager {
 
     public static void openRewardWinItemsMenu(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_WIN_ITEMS, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Edit > Fisik Reward");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Edit > Fisik Reward"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -260,9 +264,12 @@ public class EditorMenuManager {
             ItemStack item = ItemUtils.deserializeItemClean(items.get(i));
             if (item != null) {
                 ItemMeta m = item.getItemMeta();
-                List<String> lore = m.hasLore() ? m.getLore() : new ArrayList<>();
-                lore.add(" "); lore.add("§8Data ID: " + i); lore.add("§c[SHIFT + KLIK KANAN] §7Hapus Item Ini");
-                m.setLore(lore);
+                List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                if (lore == null) lore = new ArrayList<>();
+                lore.add(Component.empty());
+                lore.add(TextUtils.format("&8Data ID: " + i));
+                lore.add(TextUtils.format("&c[SHIFT + KLIK KANAN] &7Hapus Item Ini"));
+                m.lore(lore);
                 m.getPersistentDataContainer().set(new NamespacedKey(SeriaCrate.getInstance(), "gui_list_index"), PersistentDataType.INTEGER, i);
                 item.setItemMeta(m);
                 inv.setItem(i, item);
@@ -278,7 +285,7 @@ public class EditorMenuManager {
 
     public static void openRewardCommandsMenu(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_COMMANDS, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Edit > Commands");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Edit > Commands"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -307,7 +314,7 @@ public class EditorMenuManager {
 
     public static void openBlockEditor(Player player, String crateId, int page) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.BLOCK_EDITOR, crateId, null, page);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Pilih Blok (Hal " + (page + 1) + ")");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Pilih Blok (Hal " + (page + 1) + ")"));
         holder.setInventory(inv);
 
         int startIndex = page * 45;

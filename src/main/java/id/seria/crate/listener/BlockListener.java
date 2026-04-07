@@ -3,6 +3,9 @@ package id.seria.crate.listener;
 import java.io.File;
 import java.util.List;
 
+import net.kyori.adventure.text.Component;
+import id.seria.crate.util.TextUtils;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -62,13 +65,13 @@ public class BlockListener implements Listener {
             // ===========================================
             if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
                if (player.isSneaking() && (player.isOp() || player.hasPermission("seriacrate.admin"))) {
-                  if (isTemporary) {
+                  if (isTemporary && tempCrate != null) {
                      tempCrate.timeLeft = 0; // Memaksa updater menghancurkan Crate Sementara
                   } else {
                      this.plugin.getLocationManager().removeCrateLocation(loc); // Hapus Crate Permanen
                   }
                   loc.getBlock().setType(Material.AIR);
-                  player.sendMessage("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihancurkan paksa!");
+                  player.sendMessage(TextUtils.format("§c[SeriaCrate] Crate " + bossName.toUpperCase() + " berhasil dihancurkan paksa!"));
                   return;
                }
                
@@ -78,90 +81,95 @@ public class BlockListener implements Listener {
             // ===========================================
             // KLIK KANAN UNTUK ROLL HADIAH
             // ===========================================
-            else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-               if (isTemporary) {
-                  if (tempCrate.claimedPlayers.contains(player.getUniqueId())) {
-                     String prefix = this.plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] ");
-                     player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', prefix + "&cKamu sudah mengambil hadiah di crate ini!"));
-                     return;
-                  }
-               }
-
-               File file = new File(this.plugin.getConfigManager().getRewardsFolder(), bossName + ".yml");
-               FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-               // 1. PENGURANGAN RESIN SEBELUM GACHA
-               int resinCost = config.getInt("crate-settings.resin-cost", 0);
-               if (resinCost > 0) {
-                   if (!this.plugin.getResinManager().hasResin(player.getUniqueId(), resinCost)) {
-                       int currentResin = this.plugin.getResinManager().getResin(player.getUniqueId());
-                       String prefix = this.plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] ");
-                       player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', prefix + "&cResin tidak cukup! Butuh &6" + resinCost + " 🔲 &c(Milikmu: &6" + currentResin + "&c)"));
-                       return; 
+            else if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+                final id.seria.crate.manager.TemporaryCrateManager.ActiveCrate finalTempCrate = tempCrate;
+                if (finalTempCrate != null) {
+                   if (finalTempCrate.claimedPlayers.contains(player.getUniqueId())) {
+                      String prefixStr = this.plugin.getConfigManager().getConfig().getString("settings.prefix", "&8[&eSeriaCrate&8] ");
+                      player.sendMessage(id.seria.crate.util.TextUtils.format(prefixStr + "&cKamu sudah mengambil hadiah di crate ini!"));
+                      return;
                    }
-               }
+                }
 
-               // 2. GACHA TIER
-               String tierToRoll = "d"; 
-               double chanceS = config.getDouble("crate-settings.tier-chance.s", 5.0);  
-               double chanceA = config.getDouble("crate-settings.tier-chance.a", 15.0); 
-               double chanceB = config.getDouble("crate-settings.tier-chance.b", 25.0); 
-               double chanceC = config.getDouble("crate-settings.tier-chance.c", 25.0); 
-               double chanceD = config.getDouble("crate-settings.tier-chance.d", 30.0); 
+                File file = new File(this.plugin.getConfigManager().getRewardsFolder(), bossName + ".yml");
+                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-               double totalWeight = chanceS + chanceA + chanceB + chanceC + chanceD;
-               double randomVal = Math.random() * totalWeight;
+                // 1. PENGURANGAN RESIN SEBELUM GACHA
+                int resinCost = config.getInt("crate-settings.resin-cost", 0);
+                if (resinCost > 0) {
+                    if (!this.plugin.getResinManager().hasResin(player.getUniqueId(), resinCost)) {
+                        int currentResin = this.plugin.getResinManager().getResin(player.getUniqueId());
+                        Component prefixComponent = this.plugin.getConfigManager().getMessage("prefix");
+                        player.sendMessage(prefixComponent.append(TextUtils.format("&cResin tidak cukup! Butuh &6" + resinCost + " 🔲 &c(Milikmu: &6" + currentResin + "&c)")));
+                        return; 
+                    }
+                }
 
-               if (randomVal < chanceS) tierToRoll = "s";
-               else if (randomVal < chanceS + chanceA) tierToRoll = "a";
-               else if (randomVal < chanceS + chanceA + chanceB) tierToRoll = "b";
-               else if (randomVal < chanceS + chanceA + chanceB + chanceC) tierToRoll = "c";
-               else tierToRoll = "d";
+                // 2. GACHA TIER
+                String tierToRoll = "d"; 
+                double chanceS = config.getDouble("crate-settings.tier-chance.s", 5.0);  
+                double chanceA = config.getDouble("crate-settings.tier-chance.a", 15.0); 
+                double chanceB = config.getDouble("crate-settings.tier-chance.b", 25.0); 
+                double chanceC = config.getDouble("crate-settings.tier-chance.c", 25.0); 
+                double chanceD = config.getDouble("crate-settings.tier-chance.d", 30.0); 
 
-               List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
-               if (pool == null || pool.isEmpty()) {
-                  player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll.toUpperCase());
-                  return; 
-               }
+                double totalWeight = chanceS + chanceA + chanceB + chanceC + chanceD;
+                double randomVal = Math.random() * totalWeight;
 
-               // 3. PROSES PEMBUKAAN (INSTANT & ANIMASI)
-               try {
-                   id.seria.crate.engine.RollingEngine engine = new id.seria.crate.engine.RollingEngine(this.plugin);
-                   
-                   if (player.isSneaking()) {
-                       // BUKA INSTAN SHIFT KLIK
-                       if (resinCost > 0) {
-                           this.plugin.getResinManager().consumeResin(player.getUniqueId(), resinCost);
-                           player.sendMessage("§c-" + resinCost + " 🔲 Resin");
-                       }
-                       
-                       Reward instantWin = engine.getRandomWeighted(pool);
-                       engine.giveReward(player, instantWin, bossName, tierToRoll);
-                       player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-                       
-                       if (isTemporary) tempCrate.claimedPlayers.add(player.getUniqueId());
-                       return;
-                   }
-                   
-                   // BUKA NORMAL (ANIMASI)
-                   // Gunakan "?" agar CrateGUI membaca sebagai "Rolling Tier..."
-                   Inventory inv = id.seria.crate.gui.CrateGUI.createOpeningGUI(bossName, "?");
-                   player.openInventory(inv);
-                   
-                   if (resinCost > 0) {
-                       this.plugin.getResinManager().consumeResin(player.getUniqueId(), resinCost);
-                       player.sendMessage("§c-" + resinCost + " 🔲 Resin");
-                   }
-                   
-                   engine.startRolling(player, inv, pool, bossName, tierToRoll);
-                   if (isTemporary) tempCrate.claimedPlayers.add(player.getUniqueId());
-               } catch (Exception e) {
-                   player.sendMessage("§cTerjadi kesalahan saat membuka Crate!");
-                   e.printStackTrace();
-               }
-            }
-         }
-      }
+                if (randomVal < chanceS) tierToRoll = "s";
+                else if (randomVal < chanceS + chanceA) tierToRoll = "a";
+                else if (randomVal < chanceS + chanceA + chanceB) tierToRoll = "b";
+                else if (randomVal < chanceS + chanceA + chanceB + chanceC) tierToRoll = "c";
+                else tierToRoll = "d";
+
+                List<Reward> pool = this.plugin.getRewardManager().getRewardsFor(bossName, tierToRoll);
+                if (pool == null || pool.isEmpty()) {
+                   player.sendMessage("§cHadiah untuk crate ini belum diatur di tier " + tierToRoll.toUpperCase());
+                   return; 
+                }
+
+                // 3. PROSES PEMBUKAAN (INSTANT & ANIMASI)
+                try {
+                    id.seria.crate.engine.RollingEngine engine = new id.seria.crate.engine.RollingEngine(this.plugin);
+                    
+                    if (player.isSneaking()) {
+                        // BUKA INSTAN SHIFT KLIK
+                        if (resinCost > 0) {
+                            this.plugin.getResinManager().consumeResin(player.getUniqueId(), resinCost);
+                            player.sendMessage("§c-" + resinCost + " 🔲 Resin");
+                        }
+                        
+                        Reward instantWin = engine.getRandomWeighted(pool);
+                        engine.giveReward(player, instantWin, bossName, tierToRoll);
+                        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+                        
+                        if (isTemporary && finalTempCrate != null) {
+                           finalTempCrate.claimedPlayers.add(player.getUniqueId());
+                        }
+                        return;
+                    }
+                    
+                    // BUKA NORMAL (ANIMASI)
+                    // Gunakan "?" agar CrateGUI membaca sebagai "Rolling Tier..."
+                    Inventory inv = id.seria.crate.gui.CrateGUI.createOpeningGUI(bossName, "?");
+                    player.openInventory(inv);
+                    
+                    if (resinCost > 0) {
+                        this.plugin.getResinManager().consumeResin(player.getUniqueId(), resinCost);
+                        player.sendMessage("§c-" + resinCost + " 🔲 Resin");
+                    }
+                    
+                    engine.startRolling(player, inv, pool, bossName, tierToRoll);
+                    if (isTemporary && finalTempCrate != null) {
+                       finalTempCrate.claimedPlayers.add(player.getUniqueId());
+                    }
+                } catch (Exception e) {
+                    player.sendMessage("§cTerjadi kesalahan saat membuka Crate!");
+                    e.printStackTrace();
+                }
+             }
+          }
+       }
    }
 
    @EventHandler

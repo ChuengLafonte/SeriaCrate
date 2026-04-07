@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -22,6 +21,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
 import id.seria.crate.util.ItemUtils;
+import id.seria.crate.util.TextUtils;
 
 public class RewardManager {
 
@@ -84,11 +84,9 @@ public class RewardManager {
                     // 2. Terapkan Nama & Lore
                     ItemMeta meta = displayItem.getItemMeta();
                     if (meta != null) {
-                        if (itemData.contains("display_name")) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemData.getString("display_name")));
+                        if (itemData.contains("display_name")) meta.displayName(TextUtils.format(itemData.getString("display_name")));
                         if (itemData.contains("lore")) {
-                            List<String> lore = new ArrayList<>();
-                            for (String l : itemData.getStringList("lore")) lore.add(ChatColor.translateAlternateColorCodes('&', l));
-                            meta.setLore(lore);
+                            meta.lore(TextUtils.formatList(itemData.getStringList("lore")));
                         }
                         if (itemData.contains("enchant")) {
                             meta.addEnchant(Enchantment.UNBREAKING, 1, true);
@@ -178,10 +176,14 @@ public class RewardManager {
                 config.set(path + ".texture", null);
             }
 
-            if (meta.hasDisplayName()) config.set(path + ".display_name", meta.getDisplayName().replace("§", "&"));
+            if (meta.hasDisplayName()) {
+                config.set(path + ".display_name", net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(meta.displayName()).replace("§", "&"));
+            }
             if (meta.hasLore()) {
                 List<String> cleanLore = new ArrayList<>();
-                for (String l : meta.getLore()) cleanLore.add(l.replace("§", "&"));
+                for (net.kyori.adventure.text.Component l : meta.lore()) {
+                    cleanLore.add(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(l).replace("§", "&"));
+                }
                 config.set(path + ".lore", cleanLore);
             }
             if (meta.hasEnchants()) {

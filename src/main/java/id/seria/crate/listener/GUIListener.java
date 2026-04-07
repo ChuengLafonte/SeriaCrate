@@ -4,7 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -26,7 +27,8 @@ public class GUIListener implements Listener {
         // Abaikan jika ini adalah menu Editor (sudah ditangani di EditorListener)
         if (event.getInventory().getHolder() instanceof id.seria.crate.gui.editor.EditorHolder) return;
 
-        String title = ChatColor.stripColor(event.getView().getTitle());
+        Component titleComp = event.getView().title();
+        String title = PlainTextComponentSerializer.plainText().serialize(titleComp);
         
         // Deteksi GUI berdasarkan kata kunci yang ada di config gui.yml
         if (title.contains("Pilih Tier") || title.contains("Reward:") || title.contains("Rolling Crate") || title.contains("Reward Crate")) {
@@ -36,7 +38,7 @@ public class GUIListener implements Listener {
             if (title.contains("Pilih Tier")) {
                 org.bukkit.inventory.ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
-                    String itemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+                    String itemName = PlainTextComponentSerializer.plainText().serialize(clickedItem.getItemMeta().displayName());
                     String bossName = title.replace("Pilih Tier: ", "").trim();
                     
                     org.bukkit.inventory.Inventory newInv = null;

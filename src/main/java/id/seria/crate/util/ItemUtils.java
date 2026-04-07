@@ -1,12 +1,9 @@
 package id.seria.crate.util;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -14,8 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.profile.PlayerProfile;
-import org.bukkit.profile.PlayerTextures;
+import com.destroystokyo.paper.profile.PlayerProfile;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
@@ -68,12 +64,10 @@ public class ItemUtils {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 if (itemCfg.contains("name")) {
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemCfg.getString("name")));
+                    meta.displayName(TextUtils.format(itemCfg.getString("name")));
                 }
                 if (itemCfg.contains("lore")) {
-                    List<String> lore = new ArrayList<>();
-                    for (String l : itemCfg.getStringList("lore")) lore.add(ChatColor.translateAlternateColorCodes('&', l));
-                    meta.setLore(lore);
+                    meta.lore(TextUtils.formatList(itemCfg.getStringList("lore")));
                 }
                 item.setItemMeta(meta);
             }
@@ -98,24 +92,25 @@ public class ItemUtils {
         ItemStack item = new ItemStack(mat != null ? mat : Material.ENDER_CHEST);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&l&e" + bossName.toUpperCase() + " CRATE"));
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&7Letakkan blok ini di lantai"));
-            lore.add(ChatColor.translateAlternateColorCodes('&', "&7untuk membuat Crate permanen."));
-            meta.setLore(lore);
+            meta.displayName(TextUtils.format("&l&e" + bossName.toUpperCase() + " CRATE"));
+            meta.lore(java.util.Arrays.asList(
+                TextUtils.format("&7Letakkan blok ini di lantai"),
+                TextUtils.format("&7untuk membuat Crate permanen.")
+            ));
             meta.getPersistentDataContainer().set(new NamespacedKey(SeriaCrate.getInstance(), "crate_id"), PersistentDataType.STRING, bossName.toLowerCase());
             item.setItemMeta(meta);
         }
         return item;
     }
 
+    @SuppressWarnings("deprecation")
     public static String getTexture(SkullMeta meta) {
         try {
-            PlayerProfile profile = meta.getOwnerProfile();
+            org.bukkit.profile.PlayerProfile profile = meta.getPlayerProfile();
             if (profile != null && profile.getTextures().getSkin() != null) {
                 String url = profile.getTextures().getSkin().toString();
                 String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + url + "\"}}}";
-                return Base64.getEncoder().encodeToString(json.getBytes());
+                return java.util.Base64.getEncoder().encodeToString(json.getBytes());
             }
         } catch (Exception ignored) {}
         return null;
@@ -124,13 +119,9 @@ public class ItemUtils {
     public static void applyTexture(SkullMeta meta, String b64) {
         if (b64 == null || b64.isEmpty()) return;
         try {
-            PlayerProfile profile = org.bukkit.Bukkit.createPlayerProfile(java.util.UUID.randomUUID());
-            String decoded = new String(Base64.getDecoder().decode(b64));
-            String urlStr = decoded.split("\"url\":\"")[1].split("\"")[0];
-            PlayerTextures textures = profile.getTextures();
-            textures.setSkin(new URL(urlStr));
-            profile.setTextures(textures);
-            meta.setOwnerProfile(profile);
+            PlayerProfile profile = org.bukkit.Bukkit.createProfile(java.util.UUID.randomUUID());
+            profile.setProperty(new com.destroystokyo.paper.profile.ProfileProperty("textures", b64));
+            meta.setPlayerProfile(profile);
         } catch (Exception ignored) {}
     }
 
@@ -164,8 +155,10 @@ public class ItemUtils {
             } catch(Exception ignored) {}
             ItemStack fb = new ItemStack(Material.PLAYER_HEAD);
             ItemMeta m = fb.getItemMeta(); 
-            m.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&aEcoPets: " + parts[1])); 
-            fb.setItemMeta(m);
+            if (m != null) {
+                m.displayName(TextUtils.format("&aEcoPets: " + parts[1])); 
+                fb.setItemMeta(m);
+            }
             return fb;
         } else if (str.startsWith("mmoitems:")) {
             try {

@@ -5,13 +5,13 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
+import net.kyori.adventure.text.Component;
+import id.seria.crate.util.TextUtils;
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
 import id.seria.crate.util.ItemUtils;
@@ -20,7 +20,7 @@ public class PreviewGUI {
 
     public static Inventory createTierSelection(String bossName) {
         FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
-        String title = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("preview-tier-gui.title", "&8Pilih Tier: %boss%").replace("%boss%", bossName.toUpperCase()));
+        Component title = TextUtils.format(guiConfig.getString("preview-tier-gui.title", "&8Pilih Tier: %boss%").replace("%boss%", bossName.toUpperCase()));
         int size = guiConfig.getInt("preview-tier-gui.size", 27);
         Inventory inv = Bukkit.createInventory(null, size, title);
 
@@ -41,7 +41,7 @@ public class PreviewGUI {
 
     public static Inventory createRewardPreview(String bossName, String tier) {
         FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
-        String title = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("preview-reward-gui.title", "&8Reward: %boss% (%tier%)")
+        Component title = TextUtils.format(guiConfig.getString("preview-reward-gui.title", "&8Reward: %boss% (%tier%)")
                 .replace("%boss%", bossName.toUpperCase())
                 .replace("%tier%", tier.toUpperCase()));
         int size = guiConfig.getInt("preview-reward-gui.size", 54);
@@ -72,19 +72,20 @@ public class PreviewGUI {
                 ItemMeta meta = item.getItemMeta();
                 
                 if (meta != null) {
-                    List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-                    lore.add(" ");
+                    List<Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
+                    if (lore == null) lore = new ArrayList<>();
+                    lore.add(Component.empty());
                     double chance = totalWeight > 0 ? ((double) reward.getWeight() / totalWeight) * 100 : 0;
                     
                     String tierColor = "&f";
                     if (guiConfig.contains("preview-tier-gui.items." + tier.toLowerCase() + ".name")) {
                         String name = guiConfig.getString("preview-tier-gui.items." + tier.toLowerCase() + ".name");
-                        if (name.length() >= 4) tierColor = name.substring(0, 4);
+                        if (name != null && name.length() >= 4) tierColor = name.substring(0, 4);
                     }
 
-                    lore.add(ChatColor.translateAlternateColorCodes('&', "&7Tier: " + tierColor + "Tier " + tier.toUpperCase()));
-                    lore.add(ChatColor.translateAlternateColorCodes('&', "&7Peluang: &a" + String.format("%.2f", chance) + "%"));
-                    meta.setLore(lore);
+                    lore.add(TextUtils.format("&7Tier: " + tierColor + "Tier " + tier.toUpperCase()));
+                    lore.add(TextUtils.format("&7Peluang: &a" + String.format("%.2f", chance) + "%"));
+                    meta.lore(lore);
                     item.setItemMeta(meta);
                 }
                 inv.setItem(i, item);

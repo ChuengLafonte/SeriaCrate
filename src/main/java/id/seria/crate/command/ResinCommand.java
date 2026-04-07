@@ -2,7 +2,6 @@ package id.seria.crate.command;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -79,9 +78,25 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            UUID    targetUUID  = target != null ? target.getUniqueId() : offlineTarget.getUniqueId();
-            String  displayName = target != null ? target.getName() : offlineTarget.getName();
-            boolean isOnline    = target != null;
+            final Player finalTarget = target;
+            final OfflinePlayer finalOfflineTarget = offlineTarget;
+
+            final java.util.UUID targetUUID;
+            final String displayName;
+            final boolean isOnline;
+
+            if (finalTarget != null) {
+                targetUUID = finalTarget.getUniqueId();
+                displayName = finalTarget.getName();
+                isOnline = true;
+            } else if (finalOfflineTarget != null) {
+                targetUUID = finalOfflineTarget.getUniqueId();
+                String name = finalOfflineTarget.getName();
+                displayName = (name != null) ? name : targetName;
+                isOnline = false;
+            } else {
+                return true; 
+            }
 
             if (action.equals("check")) {
                 int current = plugin.getResinManager().getResin(targetUUID);
@@ -112,7 +127,7 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                     plugin.getResinManager().setResin(targetUUID, amount);
                     sender.sendMessage(prefix.append(TextUtils.format("§aBerhasil mengatur resin §b" + displayName
                             + " §amenjadi §6" + amount + (isOnline ? "" : " §8(offline — tersimpan)"))));
-                    if (isOnline) target.sendMessage(prefix.append(TextUtils.format(
+                    if (target != null) target.sendMessage(prefix.append(TextUtils.format(
                             "§eAdmin mengatur resin kamu menjadi §6" + amount + " 🔲§e.")));
                     break;
 
@@ -121,7 +136,7 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                     int currentAdd = plugin.getResinManager().getResin(targetUUID);
                     sender.sendMessage(prefix.append(TextUtils.format("§aBerhasil menambah §6" + amount
                             + " §aresin ke §b" + displayName + (isOnline ? "" : " §8(offline — tersimpan)"))));
-                    if (isOnline) target.sendMessage(prefix.append(TextUtils.format("§6+" + amount
+                    if (target != null) target.sendMessage(prefix.append(TextUtils.format("§6+" + amount
                             + " 🔲 §7(§6" + currentAdd + "§7/§6" + max + "§7)")));
                     break;
 
@@ -129,7 +144,7 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                     plugin.getResinManager().takeResin(targetUUID, amount);
                     sender.sendMessage(prefix.append(TextUtils.format("§aBerhasil mengurangi §6" + amount
                             + " §aresin dari §b" + displayName + (isOnline ? "" : " §8(offline — tersimpan)"))));
-                    if (isOnline) {
+                    if (target != null) {
                         int currentAfter = plugin.getResinManager().getResin(targetUUID);
                         target.sendMessage(prefix.append(TextUtils.format("§c-" + amount
                                 + " 🔲 §7(§6" + currentAfter + "§7/§6" + max + "§7)")));
@@ -175,9 +190,11 @@ public class ResinCommand implements CommandExecutor, TabCompleter {
                     }
 
                     resinItem.setAmount(itemAmount);
-                    target.getInventory().addItem(resinItem);
+                    if (finalTarget != null) {
+                        finalTarget.getInventory().addItem(resinItem);
+                        finalTarget.sendMessage(prefix.append(TextUtils.format("§aKamu menerima §6" + itemAmount + "x Infused Resin§a!")));
+                    }
                     sender.sendMessage(prefix.append(TextUtils.format("§aBerhasil memberikan §6" + itemAmount + "x Infused Resin §ake §b" + displayName)));
-                    target.sendMessage(prefix.append(TextUtils.format("§aKamu menerima §6" + itemAmount + "x Infused Resin§a!")));
                     break;
 
                 default:

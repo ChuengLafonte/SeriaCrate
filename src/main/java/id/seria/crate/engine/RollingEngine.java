@@ -63,7 +63,7 @@ public class RollingEngine {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(color + "Mendapatkan Tier " + tier.toUpperCase() + "...");
+            meta.displayName(id.seria.crate.util.TextUtils.format(color + "Mendapatkan Tier " + tier.toUpperCase() + "..."));
             item.setItemMeta(meta);
         }
         return item;

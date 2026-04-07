@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,9 +16,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.inventory.ItemStack;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import id.seria.crate.SeriaCrate;
 
@@ -77,18 +77,22 @@ public class EditorListener implements Listener {
         if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
         String itemName = "";
         if (event.getCurrentItem().hasItemMeta() && event.getCurrentItem().getItemMeta().hasDisplayName()) {
-            itemName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
+            itemName = PlainTextComponentSerializer.plainText().serialize(event.getCurrentItem().getItemMeta().displayName());
+            if (itemName == null) itemName = "";
         }
 
         switch (holder.getType()) {
             case MAIN_MENU:
                 if (itemName.contains("Buat Crate Baru")) {
                     player.closeInventory();
-                    player.sendMessage("§eKetik nama Crate baru di chat.");
+                    player.sendMessage(id.seria.crate.util.TextUtils.format("§eKetik nama Crate baru di chat."));
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("CREATE_CRATE", null, null, -1));
                 } else if (!itemName.isEmpty() && event.getRawSlot() < 45) {
                     EditorMenuManager.openCrateSettings(player, itemName.toLowerCase());
                 }
+                break;
+            case HOLOGRAM_EDITOR:
+                // No actions for now, just to satisfy the switch
                 break;
 
             case CRATE_SETTINGS:
@@ -253,14 +257,14 @@ public class EditorListener implements Listener {
     private void save(FileConfiguration config, File file) { try { config.save(file); } catch (IOException ignored) {} }
 
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
         if (!activePrompts.containsKey(player.getUniqueId())) return;
         event.setCancelled(true);
         ChatPrompt prompt = activePrompts.remove(player.getUniqueId());
         
         Bukkit.getScheduler().runTask(SeriaCrate.getInstance(), () -> {
-            String msg = event.getMessage();
+            String msg = PlainTextComponentSerializer.plainText().serialize(event.message());
             if (msg.equalsIgnoreCase("batal")) {
                 player.sendMessage("§cDibatalkan.");
                 if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT") || prompt.type.contains("COMMAND")) {

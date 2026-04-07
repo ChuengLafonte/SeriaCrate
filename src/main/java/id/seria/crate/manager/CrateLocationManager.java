@@ -9,23 +9,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Display.Billboard;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.entity.Display.Billboard;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
 import id.seria.crate.util.ItemUtils;
+import id.seria.crate.util.TextUtils;
+import net.kyori.adventure.text.Component;
 
 public class CrateLocationManager {
     private final SeriaCrate plugin;
@@ -97,17 +98,16 @@ public class CrateLocationManager {
                             String coloredItemName;
                             // Cek apakah item memiliki Custom Name (Meta), jika tidak, gunakan Vanilla Name
                             if (previewItem.hasItemMeta() && previewItem.getItemMeta().hasDisplayName()) {
-                                coloredItemName = previewItem.getItemMeta().getDisplayName();
+                                // Modern way to get display name component
+                                labelDisplay.text(previewItem.getItemMeta().displayName().append(
+                                    TextUtils.format(" &8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]")
+                                ));
                             } else {
                                 // Format material vanilla (misal: DIAMOND_SWORD menjadi DIAMOND SWORD)
                                 coloredItemName = "§f" + previewItem.getType().name().replace("_", " ");
+                                String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
+                                labelDisplay.text(TextUtils.format("§f" + reward.getAmount() + "x " + coloredItemName + " " + tierLabel));
                             }
-                            
-                            // Ambil jumlah (Amount) yang benar dari model Reward
-                            String quantity = "§f" + reward.getAmount() + "x";
-                            String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
-                            
-                            labelDisplay.setText(quantity + " " + coloredItemName + " " + tierLabel);
                         }
                     }
                 }
@@ -135,6 +135,7 @@ public class CrateLocationManager {
                     double y = this.config.getDouble("crates." + key + ".y");
                     double z = this.config.getDouble("crates." + key + ".z");
                     String boss = this.config.getString("crates." + key + ".boss");
+                    if (boss == null) boss = "saok"; // Fallback
                     Location loc = new Location(world, x, y, z);
                     this.crateLocations.put(loc, boss);
                     this.spawnHologram(loc, boss);
@@ -168,11 +169,12 @@ public class CrateLocationManager {
         TextDisplay display = holoLoc.getWorld().spawn(holoLoc, TextDisplay.class);
         FileConfiguration holoConfig = this.plugin.getConfigManager().getHologram();
         List<String> lines = holoConfig.getStringList("holograms." + boss);
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines) {
-            sb.append(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", "Permanen"))).append("\n");
+        Component finalHolo = Component.empty();
+        for (int i = 0; i < lines.size(); i++) {
+            finalHolo = finalHolo.append(TextUtils.format(lines.get(i).replace("%timer%", "Permanen")));
+            if (i < lines.size() - 1) finalHolo = finalHolo.append(Component.newline());
         }
-        display.setText(sb.toString().trim());
+        display.text(finalHolo);
         display.setBillboard(Billboard.CENTER);
         display.setDefaultBackground(false);
         this.activeHolograms.put(loc, display);
@@ -191,7 +193,7 @@ public class CrateLocationManager {
         // C. Spawn Hologram Label Item (ditaruh sedikit di atas item)
         Location labelLoc = loc.clone().add(0.5D, itemOffset + 0.3D, 0.5D); 
         TextDisplay itemLabel = labelLoc.getWorld().spawn(labelLoc, TextDisplay.class);
-        itemLabel.setText("§7Memuat...");
+        itemLabel.text(TextUtils.format("§7Memuat..."));
         itemLabel.setBillboard(Billboard.CENTER);
         itemLabel.setDefaultBackground(false);
         // Atur ukuran teks label agar lebih kecil sedikit dari teks utama

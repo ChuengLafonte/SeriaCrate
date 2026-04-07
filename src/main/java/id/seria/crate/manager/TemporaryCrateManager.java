@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,6 +22,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+import net.kyori.adventure.text.Component;
+import id.seria.crate.util.TextUtils;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
@@ -146,11 +147,12 @@ public class TemporaryCrateManager {
                         int sec = crate.timeLeft % 60;
                         String timeStr = String.format("%02d:%02d", min, sec);
                         
-                        StringBuilder sb = new StringBuilder();
-                        for (String line : crate.customLines) {
-                            sb.append(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", timeStr))).append("\n");
+                        Component finalHolo = Component.empty();
+                        for (int i = 0; i < crate.customLines.size(); i++) {
+                            finalHolo = finalHolo.append(TextUtils.format(crate.customLines.get(i).replace("%timer%", timeStr)));
+                            if (i < crate.customLines.size() - 1) finalHolo = finalHolo.append(Component.newline());
                         }
-                        crate.textDisplay.setText(sb.toString().trim());
+                        crate.textDisplay.text(finalHolo);
 
                         // 2. Putar dan Ganti Item Melayang
                         if (crate.itemDisplay != null && crate.itemDisplay.isValid()) {
@@ -176,18 +178,16 @@ public class TemporaryCrateManager {
                                 crate.itemDisplay.setItemStack(previewItem);
 
                                 // 3. Update Label Item
-                                if (crate.itemLabel != null && crate.itemLabel.isValid()) {
-                                    String coloredItemName;
+                                    // Modern way to get display name component
                                     if (previewItem.hasItemMeta() && previewItem.getItemMeta().hasDisplayName()) {
-                                        coloredItemName = previewItem.getItemMeta().getDisplayName();
+                                        crate.itemLabel.text(previewItem.getItemMeta().displayName().append(
+                                            TextUtils.format(" &8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]")
+                                        ));
                                     } else {
-                                        coloredItemName = "§f" + previewItem.getType().name().replace("_", " ");
+                                        String coloredName = "§f" + previewItem.getType().name().replace("_", " ");
+                                        String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
+                                        crate.itemLabel.text(TextUtils.format("§f" + reward.getAmount() + "x " + coloredName + " " + tierLabel));
                                     }
-                                    
-                                    String quantity = "§f" + reward.getAmount() + "x";
-                                    String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
-                                    crate.itemLabel.setText(quantity + " " + coloredItemName + " " + tierLabel);
-                                }
                             }
                         }
                     }
