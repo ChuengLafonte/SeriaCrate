@@ -120,7 +120,8 @@ public class SeriaCrate extends JavaPlugin {
         if (!sender.hasPermission("seriacrate.admin")) return true;
 
         if (args.length == 0) {
-            sender.sendMessage(TextUtils.format("<yellow>/scrate spawn <boss> <x> <y> <z>"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate spawn <boss> [world] [x] [y] [z]"));
+            sender.sendMessage(TextUtils.format("<yellow>/scrate spawnat <boss> <uuid>"));
             sender.sendMessage(TextUtils.format("<yellow>/scrate editor"));
             sender.sendMessage(TextUtils.format("<yellow>/scrate givecrate <boss> [player]"));
             sender.sendMessage(TextUtils.format("<yellow>/scrate open <player> <boss> <tier>"));
@@ -148,19 +149,60 @@ public class SeriaCrate extends JavaPlugin {
             return true;
         }
 
-        // /scrate spawn
-        if (args[0].equalsIgnoreCase("spawn") && args.length >= 5) {
+        // /scrate spawn <boss> [world] [x] [y] [z]
+        if (args[0].equalsIgnoreCase("spawn") && args.length >= 2) {
+            String boss = args[1].toLowerCase();
+            Location loc = null;
+
+            if (args.length == 2) {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(TextUtils.format("<red>Gunakan /scrate spawn <boss> <world> <x> <y> <z> jika melalui console!"));
+                    return true;
+                }
+                loc = ((Player) sender).getLocation().getBlock().getLocation();
+            } else if (args.length >= 6) {
+                org.bukkit.World world = Bukkit.getWorld(args[2]);
+                if (world == null) {
+                    sender.sendMessage(TextUtils.format("<red>World " + args[2] + " tidak ditemukan!"));
+                    return true;
+                }
+                try {
+                    double x = Double.parseDouble(args[3]);
+                    double y = Double.parseDouble(args[4]);
+                    double z = Double.parseDouble(args[5]);
+                    loc = new Location(world, x, y, z).getBlock().getLocation();
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(TextUtils.format("<red>Koordinat harus berupa angka!"));
+                    return true;
+                }
+            } else {
+                sender.sendMessage(TextUtils.format("<yellow>Gunakan: /scrate spawn <boss> [world] [x] [y] [z]"));
+                return true;
+            }
+
+            tempCrateManager.spawnTemporaryCrate(loc, boss);
+            sender.sendMessage(TextUtils.format("<#00FF00>Berhasil spawn Crate <bold>"
+                    + boss.toUpperCase() + "</bold> di " + loc.getWorld().getName() + " " + loc.getBlockX() + " " + loc.getBlockY() + " " + loc.getBlockZ()));
+            return true;
+        }
+
+        // /scrate spawnat <boss> <uuid>
+        if (args[0].equalsIgnoreCase("spawnat") && args.length >= 3) {
+            String boss = args[1].toLowerCase();
+            String uuidStr = args[2];
             try {
-                String boss = args[1].toLowerCase();
-                double x = Double.parseDouble(args[2]);
-                double y = Double.parseDouble(args[3]);
-                double z = Double.parseDouble(args[4]);
-                Location loc = new Location(((Player) sender).getWorld(), x, y, z);
+                java.util.UUID uuid = java.util.UUID.fromString(uuidStr);
+                org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
+                if (entity == null) {
+                    sender.sendMessage(TextUtils.format("<red>Entity tidak ditemukan atau sedang tidak terload!"));
+                    return true;
+                }
+                Location loc = entity.getLocation().getBlock().getLocation();
                 tempCrateManager.spawnTemporaryCrate(loc, boss);
                 sender.sendMessage(TextUtils.format("<#00FF00>Berhasil spawn Crate <bold>"
-                        + boss.toUpperCase() + "</bold> sementara!"));
-            } catch (Exception e) {
-                sender.sendMessage(TextUtils.format("<red>Koordinat harus berupa angka!"));
+                        + boss.toUpperCase() + "</bold> di lokasi Entity!"));
+            } catch (IllegalArgumentException e) {
+                sender.sendMessage(TextUtils.format("<red>UUID tidak valid!"));
             }
             return true;
         }
@@ -202,8 +244,8 @@ public class SeriaCrate extends JavaPlugin {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        List<String> commands = Arrays.asList("spawn", "open", "reload", "editor", "givecrate");
-        List<String> bosses = Arrays.asList("saok", "skeleton", "hallow");
+        List<String> commands = Arrays.asList("spawn", "spawnat", "open", "reload", "editor", "givecrate");
+        List<String> bosses = new ArrayList<>(rewardManager.getCrateIds());
         List<String> tiers = Arrays.asList("s", "a", "b", "c", "d");
 
         if (!sender.hasPermission("seriacrate.admin")) return completions;
@@ -211,26 +253,26 @@ public class SeriaCrate extends JavaPlugin {
         if (args.length == 1) {
             completions.addAll(commands);
         } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("spawn") || args[0].equalsIgnoreCase("givecrate")) {
+            if (args[0].equalsIgnoreCase("spawn") || args[0].equalsIgnoreCase("spawnat") || args[0].equalsIgnoreCase("givecrate")) {
                 completions.addAll(bosses);
             } else if (args[0].equalsIgnoreCase("open")) {
                 for (Player p : Bukkit.getOnlinePlayers()) completions.add(p.getName());
             }
         } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("spawn")) {
-                completions.add("<x>");
-                if (sender instanceof Player)
-                    completions.add(String.valueOf(((Player) sender).getLocation().getBlockX()));
-            } else if (args[0].equalsIgnoreCase("open")) {
+            if (args[0].equalsIgnoreCase("open")) {
                 completions.addAll(bosses);
             } else if (args[0].equalsIgnoreCase("givecrate")) {
                 for (Player p : Bukkit.getOnlinePlayers()) completions.add(p.getName());
+            } else if (args[0].equalsIgnoreCase("spawn")) {
+                for (org.bukkit.World w : Bukkit.getWorlds()) completions.add(w.getName());
             }
         } else if (args.length == 4) {
             if (args[0].equalsIgnoreCase("open")) completions.addAll(tiers);
-            else if (args[0].equalsIgnoreCase("spawn")) completions.add("<y>");
-        } else if (args.length == 5 && args[0].equalsIgnoreCase("spawn")) {
-            completions.add("<z>");
+            else if (args[0].equalsIgnoreCase("spawn") && sender instanceof Player) completions.add(String.valueOf(((Player)sender).getLocation().getBlockX()));
+        } else if (args.length == 5) {
+            if (args[0].equalsIgnoreCase("spawn") && sender instanceof Player) completions.add(String.valueOf(((Player)sender).getLocation().getBlockY()));
+        } else if (args.length == 6) {
+            if (args[0].equalsIgnoreCase("spawn") && sender instanceof Player) completions.add(String.valueOf(((Player)sender).getLocation().getBlockZ()));
         }
 
         String currentArg = args[args.length - 1].toLowerCase();

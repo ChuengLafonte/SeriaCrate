@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,9 +16,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.inventory.ItemStack;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import id.seria.crate.SeriaCrate;
 
@@ -77,18 +77,22 @@ public class EditorListener implements Listener {
         if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
         String itemName = "";
         if (event.getCurrentItem().hasItemMeta() && event.getCurrentItem().getItemMeta().hasDisplayName()) {
-            itemName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
+            itemName = PlainTextComponentSerializer.plainText().serialize(event.getCurrentItem().getItemMeta().displayName());
+            if (itemName == null) itemName = "";
         }
 
         switch (holder.getType()) {
             case MAIN_MENU:
                 if (itemName.contains("Buat Crate Baru")) {
                     player.closeInventory();
-                    player.sendMessage("§eKetik nama Crate baru di chat.");
+                    player.sendMessage(id.seria.crate.util.TextUtils.format("§eKetik nama Crate baru di chat."));
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("CREATE_CRATE", null, null, -1));
                 } else if (!itemName.isEmpty() && event.getRawSlot() < 45) {
                     EditorMenuManager.openCrateSettings(player, itemName.toLowerCase());
                 }
+                break;
+            case HOLOGRAM_EDITOR:
+                // No actions for now, just to satisfy the switch
                 break;
 
             case CRATE_SETTINGS:
@@ -98,30 +102,42 @@ public class EditorListener implements Listener {
                 if (itemName.contains("Tipe Crate")) {
                     config.set("crate-settings.is-temporary", !config.getBoolean("crate-settings.is-temporary", false));
                     save(config, file); EditorMenuManager.openCrateSettings(player, holder.getCrateId());
-                } else if (itemName.contains("Durasi")) {
+                }
+                else if (itemName.contains("Durasi")) {
                     player.closeInventory(); player.sendMessage("§eKetik durasi timer baru (dalam detik).");
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_DURATION", holder.getCrateId(), null, -1));
-                } else if (itemName.contains("Rewards")) {
+                }
+                else if (itemName.contains("Rewards")) {
                     EditorMenuManager.openTierSelection(player, holder.getCrateId());
-                } else if (itemName.contains("Hologram")) {
+                }
+                else if (itemName.equals("Hologram")) { // <-- UBAH BAGIAN INI MENJADI .equals
                     boolean currentHolo = config.getBoolean("crate-settings.hologram", true);
                     config.set("crate-settings.hologram", !currentHolo); 
                     save(config, file);
                     player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1f, 1f);
                     SeriaCrate.getInstance().getLocationManager().loadLocations(); 
                     EditorMenuManager.openCrateSettings(player, holder.getCrateId());
-                } else if (itemName.contains("Blok Fisik")) {
+                }
+                else if (itemName.contains("Blok Fisik")) {
                     EditorMenuManager.openBlockEditor(player, holder.getCrateId(), 0); 
                 } 
-                // ==========================================
-                // [TAMBAHAN BARU] Tombol Biaya Resin
-                // ==========================================
                 else if (itemName.contains("Biaya Resin")) {
                     player.closeInventory();
                     player.sendMessage("§eKetik jumlah Biaya Resin untuk crate ini di chat (ketik 0 untuk gratis):");
                     activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_RESIN_COST", holder.getCrateId(), null, -1));
                 }
-                // ==========================================
+                // --- AWAL KODE BARU ---
+                else if (itemName.contains("Tinggi Teks Hologram")) {
+                    player.closeInventory();
+                    player.sendMessage("§eKetik tinggi Teks Hologram baru (gunakan titik, misal: 1.2):");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_TEXT_OFFSET", holder.getCrateId(), null, -1));
+                }
+                else if (itemName.contains("Tinggi Item Melayang")) {
+                    player.closeInventory();
+                    player.sendMessage("§eKetik tinggi Item Melayang baru (gunakan titik, misal: 2.0):");
+                    activePrompts.put(player.getUniqueId(), new ChatPrompt("EDIT_ITEM_OFFSET", holder.getCrateId(), null, -1));
+                }
+                // --- AKHIR KODE BARU ---
                 else if (itemName.contains("Ambil Crate")) {
                     player.getInventory().addItem(id.seria.crate.util.ItemUtils.getCrateItem(holder.getCrateId()));
                 } else if (itemName.contains("Kembali")) {
@@ -241,14 +257,14 @@ public class EditorListener implements Listener {
     private void save(FileConfiguration config, File file) { try { config.save(file); } catch (IOException ignored) {} }
 
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
         if (!activePrompts.containsKey(player.getUniqueId())) return;
         event.setCancelled(true);
         ChatPrompt prompt = activePrompts.remove(player.getUniqueId());
         
         Bukkit.getScheduler().runTask(SeriaCrate.getInstance(), () -> {
-            String msg = event.getMessage();
+            String msg = PlainTextComponentSerializer.plainText().serialize(event.message());
             if (msg.equalsIgnoreCase("batal")) {
                 player.sendMessage("§cDibatalkan.");
                 if (prompt.type.contains("WEIGHT") || prompt.type.contains("AMOUNT") || prompt.type.contains("COMMAND")) {
@@ -267,6 +283,29 @@ public class EditorListener implements Listener {
                 EditorMenuManager.openRewardCommandsMenu(player, prompt.crateId, prompt.tierId, prompt.dataIndex);
                 player.sendMessage("§aCommand ditambahkan!");
                 return;
+            }
+
+            if (prompt.type.equals("EDIT_TEXT_OFFSET") || prompt.type.equals("EDIT_ITEM_OFFSET")) {
+                try {
+                    double val = Double.parseDouble(msg);
+                    if (prompt.type.equals("EDIT_TEXT_OFFSET")) {
+                        c.set("crate-settings.text-offset", val);
+                    } else {
+                        c.set("crate-settings.item-offset", val);
+                    }
+                    save(c, f);
+                    player.sendMessage("§aKetinggian berhasil diubah menjadi " + val);
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    
+                    // Reload langsung lokasi agar tampilan hologram di depannya otomatis bergeser
+                    SeriaCrate.getInstance().getLocationManager().loadLocations();
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
+                } catch (NumberFormatException e) {
+                    player.sendMessage("§cInput tidak valid! Harus berupa angka desimal menggunakan titik (contoh: 1.5).");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                    EditorMenuManager.openCrateSettings(player, prompt.crateId);
+                }
+                return; // Hentikan eksekusi di sini agar tidak error masuk ke parsing Integer
             }
 
             try {

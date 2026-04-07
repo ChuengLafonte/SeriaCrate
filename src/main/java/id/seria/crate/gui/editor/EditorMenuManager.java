@@ -14,6 +14,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import net.kyori.adventure.text.Component;
+import id.seria.crate.util.TextUtils;
 
 import id.seria.crate.SeriaCrate;
 import id.seria.crate.model.Reward;
@@ -25,10 +27,10 @@ public class EditorMenuManager {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(name);
-            List<String> loreList = new ArrayList<>();
-            for (String l : lore) loreList.add(l);
-            meta.setLore(loreList);
+            meta.displayName(TextUtils.format(name));
+            List<Component> loreList = new ArrayList<>();
+            for (String l : lore) loreList.add(TextUtils.format(l));
+            meta.lore(loreList);
             item.setItemMeta(meta);
         }
         return item;
@@ -45,65 +47,111 @@ public class EditorMenuManager {
 
     public static void openMainMenu(Player player) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.MAIN_MENU, null, null, -1);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > Crates");
+        FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
+        int size = guiConfig.getInt("editor-main.size", 54);
+        Component title = TextUtils.format(guiConfig.getString("editor-main.title", "Editor > Crates"));
+        Inventory inv = Bukkit.createInventory(holder, size, title);
         holder.setInventory(inv);
 
+        List<ItemUtils.GUIItem> allItems = new ArrayList<>();
+        allItems.addAll(ItemUtils.loadGUIItems(guiConfig.getConfigurationSection("editor-main.fillers")));
+        allItems.addAll(ItemUtils.loadGUIItems(guiConfig.getConfigurationSection("editor-main.items")));
+        allItems.sort(java.util.Comparator.comparingInt(a -> a.priority));
+
+        for (ItemUtils.GUIItem gItem : allItems) {
+            for (int slot : gItem.slots) {
+                if (slot < size) inv.setItem(slot, gItem.item.clone());
+            }
+        }
+
+        // Load Crate Files ke Slot Kosong
         File folder = SeriaCrate.getInstance().getConfigManager().getRewardsFolder();
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
 
-        int slot = 10;
+        int currentSlot = 0;
         if (files != null) {
             for (File file : files) {
+                while (currentSlot < size && inv.getItem(currentSlot) != null && inv.getItem(currentSlot).getType() != Material.AIR) {
+                    currentSlot++;
+                }
+                if (currentSlot >= size) break;
+
                 String crateId = file.getName().replace(".yml", "");
                 FileConfiguration config = YamlConfiguration.loadConfiguration(file);
                 Material mat = Material.matchMaterial(config.getString("crate-settings.block", "ENDER_CHEST"));
-                inv.setItem(slot, createIcon(mat != null ? mat : Material.ENDER_CHEST, "§a" + crateId.toUpperCase()));
-                slot++;
-                if (slot == 17) slot = 19;
+                inv.setItem(currentSlot, createIcon(mat != null ? mat : Material.ENDER_CHEST, "§a" + crateId.toUpperCase()));
+                currentSlot++;
             }
         }
-        inv.setItem(slot, createIcon(Material.LIME_STAINED_GLASS_PANE, "§aBuat Crate Baru", "§7Klik untuk membuat."));
-        ItemStack filler = createIcon(Material.GRAY_STAINED_GLASS_PANE, " ");
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
-        inv.setItem(49, createIcon(Material.FEATHER, "§fInfo", "§7Crate Editor v3.5 (Clean YAML)"));
         player.openInventory(inv);
     }
 
     public static void openCrateSettings(Player player, String crateId) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.CRATE_SETTINGS, crateId, null, -1);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > ... > Crate");
+        FileConfiguration guiConfig = SeriaCrate.getInstance().getConfigManager().getGui();
+        int size = guiConfig.getInt("editor-settings.size", 54);
+        Component title = TextUtils.format(guiConfig.getString("editor-settings.title", "Editor > ... > Crate"));
+        Inventory inv = Bukkit.createInventory(holder, size, title);
         holder.setInventory(inv);
 
+        // Ambil Data Asli dari Crate Config
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         boolean isTemp = config.getBoolean("crate-settings.is-temporary", false);
         int duration = config.getInt("crate-settings.duration", 180);
         boolean isHoloEnabled = config.getBoolean("crate-settings.hologram", true);
-        
-        // [RESIN] Mengambil data resin cost dari file yaml
         int resinCost = config.getInt("crate-settings.resin-cost", 0);
+        double textOffset = config.getDouble("crate-settings.text-offset", 1.2D);
+        double itemOffset = config.getDouble("crate-settings.item-offset", 1.8D);
 
-        inv.setItem(10, createIcon(isTemp ? Material.SLIME_BALL : Material.MAGMA_CREAM, "§eTipe Crate", "§7Saat ini: " + (isTemp ? "§cSementara" : "§aPermanen"), "§7Klik untuk mengubah."));
-        inv.setItem(11, createIcon(Material.NAME_TAG, "§eDurasi: §f" + duration + "s", "§7Klik untuk mengubah."));
-        inv.setItem(13, createIcon(Material.EMERALD, "§aRewards", "§7Atur hadiah crate."));
-        
-        // [RESIN] Diinjeksi ke Slot 14 milikmu
-        inv.setItem(14, createIcon(Material.SLIME_BALL, "§9Biaya Resin", "§7Saat ini: §b" + resinCost + " 🔲", " ", "§7Klik untuk mengatur biaya resin", "§7saat membuka crate."));
-        
-        inv.setItem(15, createIcon(Material.NETHER_STAR, "§bHologram", "§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI"), " ", "§7Klik untuk Mengaktifkan/Mematikan", "§7hologram di atas crate ini."));
-        inv.setItem(16, createIcon(Material.NAUTILUS_SHELL, "§dBlok Fisik", "§7Atur wujud crate."));
+        // Terapkan Layout dari GUI.yml
+        List<ItemUtils.GUIItem> allItems = new ArrayList<>();
+        allItems.addAll(ItemUtils.loadGUIItems(guiConfig.getConfigurationSection("editor-settings.fillers")));
+        allItems.addAll(ItemUtils.loadGUIItems(guiConfig.getConfigurationSection("editor-settings.items")));
+        allItems.sort(java.util.Comparator.comparingInt(a -> a.priority));
 
-        ItemStack filler = createIcon(Material.GRAY_STAINED_GLASS_PANE, " ");
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
-        inv.setItem(49, createIcon(Material.FEATHER, "§fInfo"));
-        inv.setItem(51, createIcon(Material.OAK_SIGN, "§eAmbil Crate", "§7Dapatkan item fisiknya."));
-        inv.setItem(52, createIcon(Material.BARRIER, "§cKembali"));
+        for (ItemUtils.GUIItem gItem : allItems) {
+            ItemStack item = gItem.item.clone();
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null && meta.hasDisplayName()) {
+                String name = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+                List<Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
+                if (lore == null) lore = new ArrayList<>();
+                
+                // INJECT DYNAMIC DATA
+                if (name != null && name.contains("Tipe Crate")) {
+                    lore.add(0, TextUtils.format("§7Saat ini: " + (isTemp ? "§cSementara" : "§aPermanen")));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah."));
+                } else if (name != null && name.contains("Durasi")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + duration + "s"));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah."));
+                } else if (name != null && name.contains("Biaya Resin")) {
+                    lore.add(TextUtils.format("§7Saat ini: §b" + resinCost + " 🔲"));
+                    lore.add(Component.empty()); lore.add(TextUtils.format("§7Klik untuk mengatur biaya resin")); lore.add(TextUtils.format("§7saat membuka crate."));
+                } else if (name != null && name.contains("Hologram") && !name.contains("Tinggi")) {
+                    lore.add(TextUtils.format("§7Status: " + (isHoloEnabled ? "§aAKTIF" : "§cMATI")));
+                    lore.add(Component.empty()); lore.add(TextUtils.format("§7Klik untuk Mengaktifkan/Mematikan"));
+                } else if (name != null && name.contains("Tinggi Teks Hologram")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + textOffset));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah (misal: 1.2)."));
+                } else if (name != null && name.contains("Tinggi Item Melayang")) {
+                    lore.add(TextUtils.format("§7Saat ini: §f" + itemOffset));
+                    lore.add(TextUtils.format("§7Klik untuk mengubah (misal: 2.0)."));
+                }
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
+
+            for (int slot : gItem.slots) {
+                if (slot < size) inv.setItem(slot, item.clone());
+            }
+        }
         player.openInventory(inv);
     }
 
     public static void openTierSelection(Player player, String crateId) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.TIER_SELECTION, crateId, null, -1);
-        Inventory inv = Bukkit.createInventory(holder, 27, "Editor > ... > Tiers");
+        Inventory inv = Bukkit.createInventory(holder, 27, TextUtils.format("Editor > ... > Tiers"));
         holder.setInventory(inv);
 
         inv.setItem(11, createIcon(Material.NETHER_STAR, "§cTIER S"));
@@ -117,7 +165,7 @@ public class EditorMenuManager {
 
     public static void openRewardList(Player player, String crateId, String tierId) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_LIST, crateId, tierId, -1);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > ... > Rewards");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Editor > ... > Rewards"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -137,15 +185,16 @@ public class EditorMenuManager {
                     ItemMeta m = display.getItemMeta();
                     m.getPersistentDataContainer().set(idKey, PersistentDataType.STRING, key);
 
-                    List<String> lore = m.getLore() == null ? new ArrayList<>() : m.getLore();
-                    lore.add(" ");
-                    lore.add("§8ID: " + key);
-                    lore.add("§fWeight/Peluang: §e" + reward.getWeight());
-                    lore.add("§fJumlah GUI: §a" + reward.getAmount());
-                    lore.add(" ");
-                    lore.add("§a[KLIK KIRI] §7Edit Detail");
-                    lore.add("§c[SHIFT + KLIK KANAN] §7Hapus Reward");
-                    m.setLore(lore);
+                    List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                    if (lore == null) lore = new ArrayList<>();
+                    lore.add(Component.empty());
+                    lore.add(TextUtils.format("&8ID: " + key));
+                    lore.add(TextUtils.format("&fWeight/Peluang: &e" + reward.getWeight()));
+                    lore.add(TextUtils.format("&fJumlah GUI: &a" + reward.getAmount()));
+                    lore.add(Component.empty());
+                    lore.add(TextUtils.format("&a[KLIK KIRI] &7Edit Detail"));
+                    lore.add(TextUtils.format("&c[SHIFT + KLIK KANAN] &7Hapus Reward"));
+                    m.lore(lore);
                     display.setItemMeta(m);
                     inv.setItem(slot, display);
                     slot++;
@@ -165,7 +214,7 @@ public class EditorMenuManager {
 
     public static void openRewardEdit(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_EDIT, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Editor > ... > Reward");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Editor > ... > Reward"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -203,7 +252,7 @@ public class EditorMenuManager {
 
     public static void openRewardWinItemsMenu(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_WIN_ITEMS, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Edit > Fisik Reward");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Edit > Fisik Reward"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -215,9 +264,12 @@ public class EditorMenuManager {
             ItemStack item = ItemUtils.deserializeItemClean(items.get(i));
             if (item != null) {
                 ItemMeta m = item.getItemMeta();
-                List<String> lore = m.hasLore() ? m.getLore() : new ArrayList<>();
-                lore.add(" "); lore.add("§8Data ID: " + i); lore.add("§c[SHIFT + KLIK KANAN] §7Hapus Item Ini");
-                m.setLore(lore);
+                List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                if (lore == null) lore = new ArrayList<>();
+                lore.add(Component.empty());
+                lore.add(TextUtils.format("&8Data ID: " + i));
+                lore.add(TextUtils.format("&c[SHIFT + KLIK KANAN] &7Hapus Item Ini"));
+                m.lore(lore);
                 m.getPersistentDataContainer().set(new NamespacedKey(SeriaCrate.getInstance(), "gui_list_index"), PersistentDataType.INTEGER, i);
                 item.setItemMeta(m);
                 inv.setItem(i, item);
@@ -233,7 +285,7 @@ public class EditorMenuManager {
 
     public static void openRewardCommandsMenu(Player player, String crateId, String tierId, int index) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.REWARD_COMMANDS, crateId, tierId, index);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Edit > Commands");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Edit > Commands"));
         holder.setInventory(inv);
 
         File file = new File(SeriaCrate.getInstance().getConfigManager().getRewardsFolder(), crateId + ".yml");
@@ -262,7 +314,7 @@ public class EditorMenuManager {
 
     public static void openBlockEditor(Player player, String crateId, int page) {
         EditorHolder holder = new EditorHolder(EditorHolder.MenuType.BLOCK_EDITOR, crateId, null, page);
-        Inventory inv = Bukkit.createInventory(holder, 54, "Pilih Blok (Hal " + (page + 1) + ")");
+        Inventory inv = Bukkit.createInventory(holder, 54, TextUtils.format("Pilih Blok (Hal " + (page + 1) + ")"));
         holder.setInventory(inv);
 
         int startIndex = page * 45;

@@ -1,0 +1,309 @@
+crate-settings:
+  block: ENDER_CHEST
+  hologram: true
+  duration: 180
+  tier-chance:
+    s: 1.0 # Peluang S Tier (Sangat Langka)
+    a: 9.0
+    b: 20.0
+    c: 30.0
+    d: 40.0
+  text-offset: 2.5
+  is-temporary: true
+  resin-cost: 20
+tiers:
+  s:
+    '1':
+      type: ITEM
+      material: mmoitems-MISCELLANEOUS:FARMER_ESSENCE
+      broadcast: true
+      weight: 1
+      amount: 1
+    '2':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      broadcast: true
+      weight: 2
+      amount: 2
+    '3':
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENTEAR
+      broadcast: true
+      weight: 2
+      amount: 3
+    '4':
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      broadcast: true
+      weight: 3
+      amount: 6
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 150000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 75000
+    '7':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      enchant: unbreaking
+      hide_enchant: true
+      broadcast: true
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 50000
+    '8':
+      type: PET
+      material: ecopets:fighting_seed
+      display_name: '&aSeed &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &aSeed&x&8&2&7&D&7&9&o!'
+      broadcast: true
+      weight: 1
+      amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_seed
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlMjk4YWYwNjg3YTY5NDEzYWFjYjFlOTcyNmYyNzA4ZjQ5OTE1OWU0Y2U3ZDE2ZDNhNjcyOWUwYTUzNGEyNSJ9fX0=
+      enchant: unbreaking
+      hide_enchant: true
+  a:
+    '1':
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENTEAR
+      broadcast: false
+      weight: 1
+      amount: 2
+    '2':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:ARCHONPIYAGRA
+      broadcast: false
+      weight: 1
+      amount: 1
+    '3':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      broadcast: false
+      weight: 2
+      amount: 2
+    '4':
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      broadcast: false
+      weight: 2
+      amount: 4
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&6150.000 ⏺ &fɢɪɴꜱ'
+      lore:
+      - '&7Hadiah Spesial'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 150000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 75000
+    '7':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 50000
+    '8':
+      type: PET
+      material: ecopets:fighting_seed
+      broadcast: false
+      weight: 1
+      amount: 1
+      commands:
+      - ecopets giveegg %player_name% fighting_seed
+      texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZlMjk4YWYwNjg3YTY5NDEzYWFjYjFlOTcyNmYyNzA4ZjQ5OTE1OWU0Y2U3ZDE2ZDNhNjcyOWUwYTUzNGEyNSJ9fX0=
+      display_name: '&aSeed &7[Lvl 1]'
+      lore:
+      - '&8ꜰɪɢʜᴛɪɴɢ ᴘᴇᴛ &x&F&2&B&8&3&4I'
+      - ''
+      - '&x&E&E&8&F&2&4▪ ᴇꜰꜰᴇᴄᴛ:'
+      - '&x&8&2&7&D&7&9&oNone'
+      - ''
+      - '&x&8&2&7&D&7&9&oʟᴇᴛᴀᴋᴋᴀɴ ᴅɪ ᴛᴀɴᴀʜ ᴜɴᴛᴜᴋ'
+      - '&x&8&2&7&D&7&9&oᴍᴇɴᴅᴀᴘᴀᴛᴋᴀɴ ᴘᴇᴛ &aSeed&x&8&2&7&D&7&9&o!'
+      enchant: unbreaking
+      hide_enchant: true
+  b:
+    '1':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:PIYAGRA
+      broadcast: false
+      weight: 1
+      amount: 1
+    '2':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 3
+      amount: 3
+    '3':
+      type: ITEM
+      material: mmoitems-MOBDROP:FROZENBONE
+      broadcast: false
+      weight: 1
+      amount: 2
+    '4':
+      type: ITEM
+      material: mmoitems-MOBDROP:FLUFFYSNOW
+      broadcast: false
+      weight: 3
+      amount: 4
+    '5':
+      type: ITEM
+      material: mmoitems-MOBDROP:ICECUBE
+      broadcast: false
+      weight: 3
+      amount: 4
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&675.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 75000
+    '7':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 50000
+    '8':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 25000
+  c:
+    '1':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 3
+      amount: 2
+    '2':
+      type: ITEM
+      material: mmoitems-MOBDROP:FLUFFYSNOW
+      broadcast: false
+      weight: 3
+      amount: 2
+    '3':
+      type: ITEM
+      material: mmoitems-MOBDROP:ICECUBE
+      broadcast: false
+      weight: 3
+      amount: 2
+    '4':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&650.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 1
+      amount: 1
+      cmd: eco give %player% 50000
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 25000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&620.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 20000
+  d:
+    '1':
+      type: ITEM
+      material: mmoitems-CONSUMABLE:OPENEDCANFOOD
+      broadcast: false
+      weight: 4
+      amount: 2
+    '2':
+      type: ITEM
+      material: mmoitems-MOBDROP:ICECUBE
+      broadcast: false
+      weight: 3
+      amount: 1
+    '3':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&625.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 25000
+    '4':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&620.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 2
+      amount: 1
+      cmd: eco give %player% 20000
+    '5':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&615.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 15000
+    '6':
+      type: ITEM
+      material: GOLD_NUGGET
+      display_name: '&610.000 ⏺ &fɢɪɴꜱ'
+      broadcast: false
+      weight: 3
+      amount: 1
+      cmd: eco give %player% 10000

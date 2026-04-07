@@ -2,147 +2,242 @@ package id.seria.crate.manager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Display.Billboard;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Transformation;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.entity.Display.Billboard;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import id.seria.crate.SeriaCrate;
+import id.seria.crate.model.Reward;
+import id.seria.crate.util.ItemUtils;
+import id.seria.crate.util.TextUtils;
+import net.kyori.adventure.text.Component;
 
 public class CrateLocationManager {
-   private final SeriaCrate plugin;
-   private final File file;
-   private FileConfiguration config;
-   private final Map<Location, String> crateLocations = new HashMap();
-   private final Map<Location, TextDisplay> activeHolograms = new HashMap();
+    private final SeriaCrate plugin;
+    private final File file;
+    private FileConfiguration config;
+    private final Map<Location, String> crateLocations = new HashMap<>();
+    private final Map<Location, TextDisplay> activeHolograms = new HashMap<>();
+    private final Map<Location, ItemDisplay> activeItems = new HashMap<>();
+    private final Map<Location, TextDisplay> activeItemLabels = new HashMap<>(); 
 
-   public CrateLocationManager(SeriaCrate plugin) {
-    this.plugin = plugin;
-    this.file = new File(plugin.getDataFolder(), "locations.yml");
-   
-    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        this.loadLocations();
-    }, 20L); // Delay 20 tick (1 detik) setelah server menyala
-}
+    private float rotationYaw = 0f;
 
-   public void loadLocations() {
-      this.crateLocations.clear();
-      this.clearHolograms();
-      if (!this.file.exists()) {
-         try {
-            this.file.createNewFile();
-         } catch (IOException var13) {
-         }
-      }
+    // Helper class untuk menyimpan pasangan Reward dan Tier ID-nya
+    private static class RewardTierPair {
+        final Reward reward;
+        final String tierId;
+        RewardTierPair(Reward reward, String tierId) {
+            this.reward = reward;
+            this.tierId = tierId;
+        }
+    }
 
-      this.config = YamlConfiguration.loadConfiguration(this.file);
-      if (this.config.getConfigurationSection("crates") != null) {
-         Iterator var1 = this.config.getConfigurationSection("crates").getKeys(false).iterator();
+    public CrateLocationManager(SeriaCrate plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "locations.yml");
 
-         while(var1.hasNext()) {
-            String key = (String)var1.next();
-            String worldName = this.config.getString("crates." + key + ".world");
-            World world = Bukkit.getWorld(worldName);
-            if (world != null) {
-               double x = this.config.getDouble("crates." + key + ".x");
-               double y = this.config.getDouble("crates." + key + ".y");
-               double z = this.config.getDouble("crates." + key + ".z");
-               String boss = this.config.getString("crates." + key + ".boss");
-               Location loc = new Location(world, x, y, z);
-               this.crateLocations.put(loc, boss);
-               this.spawnHologram(loc, boss);
+        Bukkit.getScheduler().runTaskLater(plugin, this::loadLocations, 20L);
+
+        // Task untuk memutar item display dan cycle item/label setiap detik
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            rotationYaw += 0.05f;
+            long timeSeconds = System.currentTimeMillis() / 2000;
+            String[] tiersList = {"s", "a", "b", "c", "d"};
+
+            for (Map.Entry<Location, ItemDisplay> entry : activeItems.entrySet()) {
+                ItemDisplay itemDisplay = entry.getValue();
+                Location loc = entry.getKey();
+                String boss = crateLocations.get(loc);
+                
+                if (itemDisplay.isValid() && boss != null) {
+                    // 1. Putar item
+                    Transformation transform = itemDisplay.getTransformation();
+                    transform.getLeftRotation().set(new AxisAngle4f(rotationYaw, 0, 1, 0));
+                    itemDisplay.setTransformation(transform);
+
+                    // 2. Cycle Logic
+                    List<RewardTierPair> allRewardsWithTiers = new ArrayList<>();
+                    for (String t : tiersList) {
+                        List<Reward> rewardsOfTier = plugin.getRewardManager().getRewardsFor(boss, t);
+                        for (Reward r : rewardsOfTier) {
+                            allRewardsWithTiers.add(new RewardTierPair(r, t));
+                        }
+                    }
+                    
+                    if (!allRewardsWithTiers.isEmpty()) {
+                        int index = (int) (timeSeconds % allRewardsWithTiers.size());
+                        RewardTierPair current = allRewardsWithTiers.get(index);
+                        Reward reward = current.reward;
+                        String tierId = current.tierId;
+
+                        // Tampilkan item
+                        ItemStack previewItem = ItemUtils.buildRewardItem(reward);
+                        itemDisplay.setItemStack(previewItem);
+
+                        // 3. Tampilkan Teks Label (format: "1x Coal [Tier S]")
+                        TextDisplay labelDisplay = activeItemLabels.get(loc);
+                        if (labelDisplay != null && labelDisplay.isValid()) {
+                            
+                            String coloredItemName;
+                            // Cek apakah item memiliki Custom Name (Meta), jika tidak, gunakan Vanilla Name
+                            if (previewItem.hasItemMeta() && previewItem.getItemMeta().hasDisplayName()) {
+                                // Modern way to get display name component
+                                labelDisplay.text(previewItem.getItemMeta().displayName().append(
+                                    TextUtils.format(" &8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]")
+                                ));
+                            } else {
+                                // Format material vanilla (misal: DIAMOND_SWORD menjadi DIAMOND SWORD)
+                                coloredItemName = "§f" + previewItem.getType().name().replace("_", " ");
+                                String tierLabel = "§8[Tier " + getTierColorLegacy(tierId) + tierId.toUpperCase() + "§8]";
+                                labelDisplay.text(TextUtils.format("§f" + reward.getAmount() + "x " + coloredItemName + " " + tierLabel));
+                            }
+                        }
+                    }
+                }
             }
-         }
-      }
+        }, 20L, 1L);
+    }
 
-   }
+    public void loadLocations() {
+        this.crateLocations.clear();
+        this.clearHolograms();
+        if (!this.file.exists()) {
+            try { this.file.createNewFile(); } catch (IOException ignored) {}
+        }
 
-   public void setCrateLocation(Location loc, String boss) {
-      this.crateLocations.put(loc, boss);
-      this.spawnHologram(loc, boss);
-      int var10000 = loc.getBlockX();
-      String key = var10000 + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
-      this.config.set("crates." + key + ".world", loc.getWorld().getName());
-      this.config.set("crates." + key + ".x", loc.getX());
-      this.config.set("crates." + key + ".y", loc.getY());
-      this.config.set("crates." + key + ".z", loc.getZ());
-      this.config.set("crates." + key + ".boss", boss);
+        this.config = YamlConfiguration.loadConfiguration(this.file);
+        if (this.config.getConfigurationSection("crates") != null) {
+            Iterator<String> var1 = this.config.getConfigurationSection("crates").getKeys(false).iterator();
 
-      try {
-         this.config.save(this.file);
-      } catch (IOException var5) {
-         var5.printStackTrace();
-      }
+            while(var1.hasNext()) {
+                String key = var1.next();
+                String worldName = this.config.getString("crates." + key + ".world");
+                World world = Bukkit.getWorld(worldName);
+                if (world != null) {
+                    double x = this.config.getDouble("crates." + key + ".x");
+                    double y = this.config.getDouble("crates." + key + ".y");
+                    double z = this.config.getDouble("crates." + key + ".z");
+                    String boss = this.config.getString("crates." + key + ".boss");
+                    if (boss == null) boss = "saok"; // Fallback
+                    Location loc = new Location(world, x, y, z);
+                    this.crateLocations.put(loc, boss);
+                    this.spawnHologram(loc, boss);
+                }
+            }
+        }
+    }
 
-   }
+    public void setCrateLocation(Location loc, String boss) {
+        this.crateLocations.put(loc, boss);
+        this.spawnHologram(loc, boss);
+        String key = loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
+        this.config.set("crates." + key + ".world", loc.getWorld().getName());
+        this.config.set("crates." + key + ".x", loc.getX());
+        this.config.set("crates." + key + ".y", loc.getY());
+        this.config.set("crates." + key + ".z", loc.getZ());
+        this.config.set("crates." + key + ".boss", boss);
+        try { this.config.save(this.file); } catch (IOException var5) { var5.printStackTrace(); }
+    }
 
-   private void spawnHologram(Location loc, String boss) {
-      // [PERBAIKAN] Cek Config Hologram Dulu
-      File crateFile = new File(this.plugin.getConfigManager().getRewardsFolder(), boss + ".yml");
-      FileConfiguration crateConfig = YamlConfiguration.loadConfiguration(crateFile);
-      if (!crateConfig.getBoolean("crate-settings.hologram", true)) {
-          return; // Batalkan proses kemunculan Hologram jika di-set FALSE di Editor
-      }
+    private void spawnHologram(Location loc, String boss) {
+        File crateFile = new File(this.plugin.getConfigManager().getRewardsFolder(), boss + ".yml");
+        FileConfiguration crateConfig = YamlConfiguration.loadConfiguration(crateFile);
+        if (!crateConfig.getBoolean("crate-settings.hologram", true)) return;
 
-      Location holoLoc = loc.clone().add(0.5D, 1.2D, 0.5D);
-      TextDisplay display = (TextDisplay)holoLoc.getWorld().spawn(holoLoc, TextDisplay.class);
-      FileConfiguration holoConfig = this.plugin.getConfigManager().getHologram();
-      List<String> lines = holoConfig.getStringList("holograms." + boss);
-      StringBuilder sb = new StringBuilder();
-      Iterator var8 = lines.iterator();
+        double textOffset = crateConfig.getDouble("crate-settings.text-offset", 1.2D);
+        double itemOffset = crateConfig.getDouble("crate-settings.item-offset", 1.8D);
 
-      while(var8.hasNext()) {
-         String line = (String)var8.next();
-         sb.append(ChatColor.translateAlternateColorCodes('&', line.replace("%timer%", "Permanen"))).append("\n");
-      }
+        // A. Spawn Text Hologram Utama Crate
+        Location holoLoc = loc.clone().add(0.5D, textOffset, 0.5D);
+        TextDisplay display = holoLoc.getWorld().spawn(holoLoc, TextDisplay.class);
+        FileConfiguration holoConfig = this.plugin.getConfigManager().getHologram();
+        List<String> lines = holoConfig.getStringList("holograms." + boss);
+        Component finalHolo = Component.empty();
+        for (int i = 0; i < lines.size(); i++) {
+            finalHolo = finalHolo.append(TextUtils.format(lines.get(i).replace("%timer%", "Permanen")));
+            if (i < lines.size() - 1) finalHolo = finalHolo.append(Component.newline());
+        }
+        display.text(finalHolo);
+        display.setBillboard(Billboard.CENTER);
+        display.setDefaultBackground(false);
+        this.activeHolograms.put(loc, display);
 
-      display.setText(sb.toString().trim());
-      display.setBillboard(Billboard.CENTER);
-      display.setDefaultBackground(false);
-      this.activeHolograms.put(loc, display);
-   }
+        // B. Spawn Item Display Melayang
+        Location itemLoc = loc.clone().add(0.5D, itemOffset, 0.5D);
+        ItemDisplay itemDisplay = itemLoc.getWorld().spawn(itemLoc, ItemDisplay.class);
+        itemDisplay.setItemStack(new ItemStack(Material.CHEST));
+        itemDisplay.setBillboard(Billboard.FIXED);
+        
+        Transformation transformation = itemDisplay.getTransformation();
+        transformation.getScale().set(new Vector3f(0.7f, 0.7f, 0.7f));
+        itemDisplay.setTransformation(transformation);
+        this.activeItems.put(loc, itemDisplay);
 
-   public void clearHolograms() {
-      Iterator var1 = this.activeHolograms.values().iterator();
+        // C. Spawn Hologram Label Item (ditaruh sedikit di atas item)
+        Location labelLoc = loc.clone().add(0.5D, itemOffset + 0.3D, 0.5D); 
+        TextDisplay itemLabel = labelLoc.getWorld().spawn(labelLoc, TextDisplay.class);
+        itemLabel.text(TextUtils.format("§7Memuat..."));
+        itemLabel.setBillboard(Billboard.CENTER);
+        itemLabel.setDefaultBackground(false);
+        // Atur ukuran teks label agar lebih kecil sedikit dari teks utama
+        Transformation textTransform = itemLabel.getTransformation();
+        textTransform.getScale().set(new Vector3f(0.8f, 0.8f, 0.8f));
+        itemLabel.setTransformation(textTransform);
 
-      while(var1.hasNext()) {
-         TextDisplay display = (TextDisplay)var1.next();
-         if (display != null && display.isValid()) {
-            display.remove();
-         }
-      }
+        this.activeItemLabels.put(loc, itemLabel);
+    }
 
-      this.activeHolograms.clear();
-   }
+    public void clearHolograms() {
+        for (TextDisplay display : activeHolograms.values()) if (display != null && display.isValid()) display.remove();
+        for (ItemDisplay display : activeItems.values()) if (display != null && display.isValid()) display.remove();
+        for (TextDisplay label : activeItemLabels.values()) if (label != null && label.isValid()) label.remove();
 
-   public void removeCrateLocation(Location loc) {
-      this.crateLocations.remove(loc);
-      TextDisplay display = (TextDisplay)this.activeHolograms.remove(loc);
-      if (display != null && display.isValid()) {
-         display.remove();
-      }
+        this.activeHolograms.clear();
+        this.activeItems.clear();
+        this.activeItemLabels.clear();
+    }
 
-      int var10000 = loc.getBlockX();
-      String key = var10000 + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
-      this.config.set("crates." + key, (Object)null);
+    public void removeCrateLocation(Location loc) {
+        this.crateLocations.remove(loc);
+        TextDisplay display = this.activeHolograms.remove(loc);
+        if (display != null && display.isValid()) display.remove();
+        ItemDisplay item = this.activeItems.remove(loc);
+        if (item != null && item.isValid()) item.remove();
+        TextDisplay label = this.activeItemLabels.remove(loc);
+        if (label != null && label.isValid()) label.remove();
 
-      try {
-         this.config.save(this.file);
-      } catch (IOException var5) {
-      }
+        String key = loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
+        this.config.set("crates." + key, null);
+        try { this.config.save(this.file); } catch (IOException ignored) {}
+    }
 
-   }
+    public String getCrateAt(Location loc) { return this.crateLocations.get(loc); }
 
-   public String getCrateAt(Location loc) {
-      return (String)this.crateLocations.get(loc);
-   }
+    // Helper untuk warna legacy (agar sinkron dengan PreviewGUI.java)
+    private static String getTierColorLegacy(String tier) {
+        switch (tier.toLowerCase()) {
+            case "s": return "§c§l";
+            case "a": return "§6§l";
+            case "b": return "§e§l";
+            case "c": return "§b§l";
+            default: return "§f§l";
+        }
+    }
 }
