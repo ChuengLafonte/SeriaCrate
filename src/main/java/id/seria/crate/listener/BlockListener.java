@@ -201,7 +201,7 @@ public class BlockListener implements Listener {
       TemporaryCrateManager.ActiveCrate temp = this.plugin.getTempCrateManager().getCrateAt(event.getBlock().getLocation());
       
       if (bossName != null || temp != null) {
-         if (event.getPlayer().hasPermission("seriacrate.admin") && event.getPlayer().isSneaking()) {
+         if ((event.getPlayer().isOp() || event.getPlayer().hasPermission("seriacrate.admin")) && event.getPlayer().isSneaking()) {
             if (bossName != null) this.plugin.getLocationManager().removeCrateLocation(event.getBlock().getLocation());
             if (temp != null) temp.timeLeft = 0;
             event.getPlayer().sendMessage("§c[SeriaCrate] Crate berhasil dihapus dari dunia!");
