@@ -26,6 +26,14 @@
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
+        <repository>
+            <id>phoenix</id>
+            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -47,29 +55,25 @@
             <groupId>com.willfp</groupId>
             <artifactId>ecopets</artifactId>
             <version>2.78.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/EcoPets v2.78.0.jar</systemPath>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.Indyuce</groupId>
-            <artifactId>mmoitems</artifactId>
-            <version>6.10.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MMOItems-6.10.1-45.jar</systemPath>
+            <artifactId>MMOItems-API</artifactId>
+            <version>6.10.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.lumine</groupId>
-            <artifactId>MythicLib</artifactId>
-            <version>1.6.1</version> 
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MythicLib-dist-1.7.1-71.jar</systemPath>
+            <artifactId>MythicLib-dist</artifactId>
+            <version>1.7.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>net.milkbowl.vault</groupId>
+            <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
             <version>1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/Vault (1).jar</systemPath>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
